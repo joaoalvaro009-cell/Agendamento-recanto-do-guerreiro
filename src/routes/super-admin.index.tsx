@@ -66,10 +66,15 @@ function SuperAdminPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listTenantsWithOwners();
-      setTenants(data as Tenant[]);
+      const raw = await listTenantsWithOwners();
+      const list: Tenant[] = Array.isArray(raw)
+        ? (raw as Tenant[])
+        : Array.isArray((raw as { result?: unknown })?.result)
+          ? ((raw as { result: Tenant[] }).result)
+          : [];
+      setTenants(list);
 
-      const ids = data.map((t) => t.id);
+      const ids = list.map((t) => t.id);
       if (ids.length) {
         const [apptCounts, barbCounts] = await Promise.all([
           Promise.all(
