@@ -47,6 +47,7 @@ function AgendarPage() {
     code: string;
     barberPhone: string;
     barberName: string;
+    waUrl: string;
   } | null>(null);
 
   const service = services.find((s) => s.id === serviceId);
@@ -141,23 +142,29 @@ function AgendarPage() {
       return;
     }
 
+    // Monta a mensagem do WhatsApp já com os dados do agendamento
+    const waMessage =
+      `🔔 *Novo agendamento — Recanto do Guerreiro*\n\n` +
+      `Cliente: ${name}\n` +
+      `WhatsApp: ${formatPhoneBR(digits)}\n` +
+      `Serviço: ${service.name} — R$ ${service.price.toFixed(2).replace(".", ",")}\n` +
+      `Data: ${formatDatePretty(date)} às ${time}\n` +
+      `Barbeiro: ${barber.name}\n` +
+      `Código: ${confirmationCode.slice(0, 8).toUpperCase()}`;
+    const url = whatsAppLink(barber.phone, waMessage);
     setConfirmed({
       code: confirmationCode,
       barberPhone: barber.phone,
       barberName: barber.name,
+      waUrl: url,
     });
+    // Abre o WhatsApp automaticamente em nova aba (não bloqueia se popup for negado)
+    setTimeout(() => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }, 600);
   }
 
   if (confirmed) {
-    const message =
-      `🔔 *Novo agendamento — Recanto do Guerreiro*\n\n` +
-      `Cliente: ${name}\n` +
-      `WhatsApp: ${formatPhoneBR(onlyDigits(phone))}\n` +
-      `Serviço: ${service?.name} — R$ ${service?.price.toFixed(2).replace(".", ",")}\n` +
-      `Data: ${date ? formatDatePretty(date) : ""} às ${time}\n` +
-      `Barbeiro: ${confirmed.barberName}\n` +
-      `Código: ${confirmed.code.slice(0, 8).toUpperCase()}`;
-
     return (
       <SiteLayout>
         <section className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">
@@ -168,6 +175,9 @@ function AgendarPage() {
             <h1 className="mt-5 font-display text-3xl font-semibold">Agendamento confirmado!</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {date ? formatDatePretty(date) : ""} às <strong className="text-foreground">{time}</strong> com {confirmed.barberName}.
+            </p>
+            <p className="mt-2 text-xs text-gold">
+              Abrindo o WhatsApp do barbeiro para você avisar o agendamento...
             </p>
 
             <div className="mt-6 rounded-xl border border-border/60 bg-background/40 p-4 text-left">
@@ -184,7 +194,7 @@ function AgendarPage() {
 
             <div className="mt-6 flex flex-col gap-2.5">
               <a
-                href={whatsAppLink(confirmed.barberPhone, message)}
+                href={confirmed.waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-gradient-gold px-5 py-3 text-sm font-semibold text-primary-foreground shadow-gold hover:scale-[1.02] transition"

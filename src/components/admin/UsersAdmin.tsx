@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { onlyDigits } from "@/lib/constants";
 import { uploadSiteImage } from "@/lib/queries";
 import {
   createBarberUser,
@@ -39,10 +40,14 @@ const emptyForm = {
   role: "Barbeiro",
   bio: "",
   imageUrl: null as string | null,
-  email: "",
   password: "",
   isAdmin: false,
+  withLogin: true,
 };
+
+function phoneToEmail(phone: string): string {
+  return `${onlyDigits(phone)}@recantodoguerreiro.local`;
+}
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const createBarberUserFn = useServerFn(createBarberUser);
@@ -118,14 +123,53 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   }
 
   async function handleCreate() {
-    if (!form.name || !form.phone || !form.email || !form.password) {
-      toast.error("Preencha nome, WhatsApp, email e senha.");
+    if (!form.name.trim() || !form.phone.trim()) {
+      toast.error("Preencha pelo menos nome e WhatsApp.");
+      return;
+    }
+    if (form.withLogin && form.password.trim().length < 8) {
+      toast.error("Senha precisa ter ao menos 8 caracteres (ou desmarque 'Criar login agora').");
       return;
     }
     setCreating(true);
     try {
-      await createBarberUserFn({ data: form });
-      toast.success("Membro criado com login.");
+      const phoneDigits = onlyDigits(form.phone);
+      if (form.withLogin) {
+        await createBarberUserFn({
+          data: {
+            name: form.name,
+            phone: form.phone,
+            role: form.role,
+            bio: form.bio,
+            imageUrl: form.imageUrl,
+            email: phoneToEmail(phoneDigits),
+            password: form.password,
+            isAdmin: form.isAdmin,
+          },
+        });
+        toast.success("Membro criado com login (WhatsApp como usuário).");
+      } else {
+        // Cria só o perfil público + barbeiro, sem login
+        const { error: bErr } = await supabase.from("barbers").insert({
+          name: form.name.trim(),
+          phone: phoneDigits,
+          email: null,
+          is_admin: false,
+          active: true,
+          bio: form.bio,
+          avatar_url: form.imageUrl,
+        });
+        if (bErr) throw bErr;
+        await supabase.from("team_members").insert({
+          name: form.name.trim(),
+          role: form.role || "Barbeiro",
+          bio: form.bio,
+          icon: "star",
+          image_url: form.imageUrl,
+          active: true,
+        });
+        toast.success("Membro criado (sem login). Crie depois em 'Criar login'.");
+      }
       setForm(emptyForm);
       setShowNew(false);
       await load();
@@ -237,25 +281,46 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <Label className="text-xs">WhatsApp (só números)</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
-                <div>
-                  <Label className="text-xs">Email (login)</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label className="text-xs">Senha inicial (mín 8)</Label>
-                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                </div>
+                {form.withLogin && (
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Senha inicial (mín 8 caracteres)</Label>
+                    <Input
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      placeholder="O usuário entra com o WhatsApp + esta senha"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      O login será feito com <strong>WhatsApp</strong> (mesmo da vitrine) e esta senha.
+                    </p>
+                  </div>
+                )}
                 <div className="sm:col-span-2">
                   <Label className="text-xs">Bio (vitrine pública)</Label>
                   <Textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.isAdmin} onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })} />
-                É administrador
-              </label>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.withLogin}
+                    onChange={(e) => setForm({ ...form, withLogin: e.target.checked })}
+                  />
+                  Criar login agora
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isAdmin}
+                    onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })}
+                    disabled={!form.withLogin}
+                  />
+                  É administrador
+                </label>
+              </div>
               <Button size="sm" onClick={() => void handleCreate()} disabled={creating}>
-                <Plus className="h-4 w-4" /> {creating ? "Criando..." : "Criar membro + login"}
+                <Plus className="h-4 w-4" /> {creating ? "Criando..." : form.withLogin ? "Criar membro + login" : "Criar membro"}
               </Button>
             </div>
           </div>
