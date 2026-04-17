@@ -283,6 +283,7 @@ export type Database = {
       plans: {
         Row: {
           active: boolean
+          checkout_url: string
           created_at: string
           display_order: number
           featured: boolean
@@ -296,6 +297,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          checkout_url?: string
           created_at?: string
           display_order?: number
           featured?: boolean
@@ -309,6 +311,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          checkout_url?: string
           created_at?: string
           display_order?: number
           featured?: boolean
