@@ -10,7 +10,6 @@ import { formatDatePretty, formatDateISO } from "@/lib/booking";
 import { formatPhoneBR, whatsAppLink } from "@/lib/constants";
 import { ServicesAdmin } from "@/components/admin/ServicesAdmin";
 import { PlansAdmin } from "@/components/admin/PlansAdmin";
-import { TeamAdmin } from "@/components/admin/TeamAdmin";
 import { UsersAdmin } from "@/components/admin/UsersAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
 
@@ -138,8 +137,7 @@ function PainelPage() {
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
             {user?.isAdmin && <TabsTrigger value="services">Serviços</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
-            {user?.isAdmin && <TabsTrigger value="team">Membros</TabsTrigger>}
-            {user?.isAdmin && <TabsTrigger value="users">Logins / Acessos</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="users">Membros / Acessos</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
           </TabsList>
 
@@ -225,15 +223,9 @@ function PainelPage() {
               <TabsContent value="plans" className="mt-6">
                 <PlansAdmin />
               </TabsContent>
-              <TabsContent value="team" className="mt-6">
-                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
-                  <p><span className="font-semibold text-foreground">Membros</span> — controla quem aparece como membro da equipe na home e na página pública. Aqui você define <strong>foto, função e bio</strong> que o cliente vê. Não cria login.</p>
-                </div>
-                <TeamAdmin />
-              </TabsContent>
               <TabsContent value="users" className="mt-6">
                 <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
-                  <p><span className="font-semibold text-foreground">Logins / Acessos</span> — cria contas de <strong>email + senha</strong> para barbeiros entrarem no painel e receberem agendamentos (aparecem na escolha do profissional em /agendar). Para mostrar essa pessoa em <em>Membros</em> com foto, edite lá também.</p>
+                  <p><span className="font-semibold text-foreground">Membros / Acessos</span> — cadastre cada membro da equipe com <strong>foto, cargo, bio, WhatsApp, email e senha</strong> de uma só vez. Eles aparecem na vitrine pública e entram no painel para receber agendamentos.</p>
                 </div>
                 <UsersAdmin currentUserId={user.id} />
               </TabsContent>
