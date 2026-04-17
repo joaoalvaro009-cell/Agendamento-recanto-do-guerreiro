@@ -579,6 +579,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      clone_tenant_from_template: {
+        Args: { _new_tenant_id: string; _template_slug: string }
+        Returns: undefined
+      }
       current_barber_id: { Args: never; Returns: string }
       current_tenant_id: { Args: never; Returns: string }
       get_appointment_by_code: {

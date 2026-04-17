@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { createTenantWithOwner } from "@/server/admin-tenants";
 
 export const Route = createFileRoute("/super-admin/")({
   head: () => ({
@@ -53,6 +54,8 @@ function SuperAdminPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [plan, setPlan] = useState("starter");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [ownerPassword, setOwnerPassword] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -156,26 +159,38 @@ function SuperAdminPage() {
       toast.error("Informe o nome da barbearia.");
       return;
     }
-    const finalSlug = slug.trim() || slugify(name);
-    if (finalSlug.length < 2) {
-      toast.error("Slug inválido.");
+    if (!ownerEmail.includes("@")) {
+      toast.error("Informe um email válido para o dono.");
+      return;
+    }
+    if (ownerPassword.length < 6) {
+      toast.error("A senha temporária precisa ter ao menos 6 caracteres.");
       return;
     }
     setCreating(true);
-    const { error } = await supabase
-      .from("tenants")
-      .insert({ name: name.trim(), slug: finalSlug, plan, active: true });
-    setCreating(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const result = await createTenantWithOwner({
+        data: {
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          plan,
+          ownerEmail: ownerEmail.trim(),
+          ownerPassword,
+        },
+      });
+      toast.success(`Barbearia "${name.trim()}" criada com conteúdo padrão. Slug: ${result.slug}`);
+      setName("");
+      setSlug("");
+      setPlan("starter");
+      setOwnerEmail("");
+      setOwnerPassword("");
+      setShowNew(false);
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao criar barbearia.");
+    } finally {
+      setCreating(false);
     }
-    toast.success("Barbearia criada.");
-    setName("");
-    setSlug("");
-    setPlan("starter");
-    setShowNew(false);
-    void load();
   }
 
   if (!authChecked) {
@@ -264,9 +279,34 @@ function SuperAdminPage() {
                 </select>
               </div>
             </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="t-owner-email">Email do dono</Label>
+                <Input
+                  id="t-owner-email"
+                  type="email"
+                  value={ownerEmail}
+                  onChange={(e) => setOwnerEmail(e.target.value)}
+                  placeholder="dono@barbearia.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="t-owner-pass">Senha temporária</Label>
+                <Input
+                  id="t-owner-pass"
+                  type="text"
+                  value={ownerPassword}
+                  onChange={(e) => setOwnerPassword(e.target.value)}
+                  placeholder="mín. 6 caracteres"
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              O dono recebe acesso de admin. Conteúdo padrão (serviços, planos, equipe, textos) é copiado da Recanto do Guerreiro.
+            </p>
             <div className="mt-4 flex gap-2">
               <Button type="submit" disabled={creating}>
-                {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar
+                {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar barbearia
               </Button>
               <Button type="button" variant="ghost" onClick={() => setShowNew(false)}>
                 Cancelar
