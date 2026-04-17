@@ -79,9 +79,11 @@ export type Database = {
       barbers: {
         Row: {
           active: boolean
+          avatar_url: string | null
           bio: string | null
           created_at: string
           display_order: number
+          email: string | null
           id: string
           is_admin: boolean
           name: string
@@ -91,9 +93,11 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_order?: number
+          email?: string | null
           id?: string
           is_admin?: boolean
           name: string
@@ -103,9 +107,11 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_order?: number
+          email?: string | null
           id?: string
           is_admin?: boolean
           name?: string
@@ -149,6 +155,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number
+          featured: boolean
+          id: string
+          items: string[]
+          name: string
+          price: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          items?: string[]
+          name: string
+          price: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          items?: string[]
+          name?: string
+          price?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          display_order: number
+          duration: number
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          display_order?: number
+          duration?: number
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          display_order?: number
+          duration?: number
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          active: boolean
+          bio: string
+          created_at: string
+          display_order: number
+          icon: string
+          id: string
+          image_url: string | null
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bio?: string
+          created_at?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bio?: string
+          created_at?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
