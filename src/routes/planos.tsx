@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Crown } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
-import { SHOP, whatsAppLink } from "@/lib/constants";
+import { whatsAppLink } from "@/lib/constants";
 import { fetchPlans, type PlanRow } from "@/lib/queries";
+import { useTenant } from "@/hooks/use-tenant";
 
 export const Route = createFileRoute("/planos")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/planos")({
 });
 
 function PlanosPage() {
+  const t = useTenant();
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,7 +82,7 @@ function PlanosPage() {
                   </ul>
 
                   <a
-                    href={whatsAppLink("75 9301-7859", message)}
+                    href={whatsAppLink(t.whatsapp || t.phone, message)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`mt-7 block rounded-full px-5 py-3 text-center text-sm font-semibold transition ${
@@ -98,7 +100,7 @@ function PlanosPage() {
         )}
 
         <p className="mt-10 text-center text-xs text-muted-foreground">
-          * Para assinar, fale com {SHOP.name} pelo WhatsApp.
+          * Para assinar, fale com {t.shop_name} pelo WhatsApp.
         </p>
       </section>
     </SiteLayout>
