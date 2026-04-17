@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { onlyDigits } from "@/lib/constants";
@@ -265,8 +266,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 {form.withLogin && (
                   <div className="sm:col-span-2">
                     <Label className="text-xs">Senha inicial (mín 4 caracteres)</Label>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
                       placeholder="O usuário entra com o WhatsApp + esta senha"
@@ -525,7 +525,7 @@ function MemberCard({
               </div>
               <div>
                 <Label className="text-xs">Senha (mín 4)</Label>
-                <Input type="password" value={linkForm.password} onChange={(e) => setLinkForm({ ...linkForm, password: e.target.value })} />
+                <PasswordInput value={linkForm.password} onChange={(e) => setLinkForm({ ...linkForm, password: e.target.value })} />
               </div>
               <label className="flex items-center gap-2 text-sm sm:col-span-2">
                 <input type="checkbox" checked={linkForm.isAdmin} onChange={(e) => setLinkForm({ ...linkForm, isAdmin: e.target.checked })} />
