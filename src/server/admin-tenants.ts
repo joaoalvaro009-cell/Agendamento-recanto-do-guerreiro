@@ -124,15 +124,17 @@ export const createTenantWithOwner = createServerFn({ method: "POST" })
     if (finalSlug === TEMPLATE_SLUG) throw new Error("Esse slug é reservado.");
 
     // 1. slug disponível?
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: existsErr } = await supabaseAdmin
       .from("tenants")
       .select("id")
       .eq("slug", finalSlug)
       .maybeSingle();
+    if (existsErr) throw new Error(`Erro ao verificar slug: ${existsErr.message}`);
     if (existing) throw new Error(`Já existe uma barbearia com o slug "${finalSlug}".`);
 
-    // 2. Cria ou recupera o usuário dono
+    // 2. Cria ou recupera o usuário dono no Auth
     let ownerUserId: string;
+    let ownerWasCreated = false;
     const { data: createdUser, error: createUserErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.ownerEmail,
       password: data.ownerPassword,
@@ -140,14 +142,31 @@ export const createTenantWithOwner = createServerFn({ method: "POST" })
     });
 
     if (createUserErr) {
-      // já existe? buscar pelo email
-      const { data: list } = await supabaseAdmin.auth.admin.listUsers();
-      const found = list?.users.find((u) => u.email?.toLowerCase() === data.ownerEmail.toLowerCase());
-      if (!found) throw new Error(createUserErr.message);
+      const msg = createUserErr.message.toLowerCase();
+      const isDuplicate =
+        msg.includes("already") || msg.includes("registered") || msg.includes("exists");
+      if (!isDuplicate) {
+        throw new Error(`Falha ao criar usuário do dono: ${createUserErr.message}`);
+      }
+      // Já existe: localiza pelo email
+      const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      if (listErr) throw new Error(`Falha ao localizar dono existente: ${listErr.message}`);
+      const found = list?.users.find(
+        (u) => u.email?.toLowerCase() === data.ownerEmail.toLowerCase(),
+      );
+      if (!found) {
+        throw new Error(
+          `Email "${data.ownerEmail}" parece existir, mas não foi possível localizá-lo. Tente outro email.`,
+        );
+      }
       ownerUserId = found.id;
     } else {
-      if (!createdUser.user) throw new Error("Falha ao criar usuário dono.");
+      if (!createdUser.user) throw new Error("Falha ao criar usuário dono (sem retorno).");
       ownerUserId = createdUser.user.id;
+      ownerWasCreated = true;
     }
 
     // 3. Cria o tenant
@@ -162,40 +181,89 @@ export const createTenantWithOwner = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (tErr || !tenant) throw new Error(tErr?.message ?? "Falha ao criar barbearia.");
+    if (tErr || !tenant) {
+      // rollback do usuário recém-criado
+      if (ownerWasCreated) {
+        await supabaseAdmin.auth.admin.deleteUser(ownerUserId).catch(() => null);
+      }
+      throw new Error(`Falha ao criar barbearia: ${tErr?.message ?? "erro desconhecido"}`);
+    }
 
     const tenantId = tenant.id;
 
-    // 4. Atribui role admin (idempotente)
-    await supabaseAdmin
-      .from("user_roles")
-      .insert({ user_id: ownerUserId, role: "admin" })
-      .then((res) => {
-        // ignora conflito, mas propaga outros erros
-        if (res.error && !res.error.message.toLowerCase().includes("duplicate")) {
-          throw new Error(res.error.message);
-        }
+    // A partir daqui, se algo falhar, removemos o tenant inteiro para não deixar órfão.
+    try {
+      // 4. Atribui role admin (idempotente)
+      const { error: roleErr } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: ownerUserId, role: "admin" });
+      if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
+        throw new Error(`Falha ao atribuir papel de admin: ${roleErr.message}`);
+      }
+
+      // 5. Cria registro do dono em barbers (vincula user_id ao tenant)
+      const { error: barberErr } = await supabaseAdmin.from("barbers").insert({
+        tenant_id: tenantId,
+        user_id: ownerUserId,
+        name: data.name.trim(),
+        phone: "00000000000",
+        email: data.ownerEmail,
+        is_admin: true,
+        active: true,
+        bio: "",
       });
+      if (barberErr) throw new Error(`Falha ao vincular dono à barbearia: ${barberErr.message}`);
 
-    // 5. Cria registro do dono em barbers (vincula user_id ao tenant)
-    await supabaseAdmin.from("barbers").insert({
-      tenant_id: tenantId,
-      user_id: ownerUserId,
-      name: data.name.trim(),
-      phone: "00000000000",
-      email: data.ownerEmail,
-      is_admin: true,
-      active: true,
-      bio: "",
-    });
-
-    // 6. Clona conteúdo da Recanto. Como a função SQL exige super_admin via auth.uid(),
-    // executamos via supabaseAdmin emulando o usuário super admin atual.
-    // O service_role bypass RLS não passa auth.uid(), então fazemos a clonagem em SQL direto.
-    await cloneTemplateForNewTenant(tenantId, data.name.trim());
+      // 6. Clona conteúdo padrão da Recanto
+      await cloneTemplateForNewTenant(tenantId, data.name.trim());
+    } catch (err) {
+      // Rollback completo do tenant (mas mantemos o usuário do Auth se ele já existia antes)
+      await rollbackTenant(tenantId);
+      if (ownerWasCreated) {
+        await supabaseAdmin.auth.admin.deleteUser(ownerUserId).catch(() => null);
+      }
+      const msg = err instanceof Error ? err.message : "Erro desconhecido na criação.";
+      throw new Error(`Criação revertida. ${msg}`);
+    }
 
     return { tenantId, slug: finalSlug, ownerUserId };
   });
+
+/**
+ * Apaga COMPLETAMENTE uma barbearia e todos os seus dados.
+ * Não apaga o usuário dono no Auth (ele pode ser dono de outras barbearias).
+ */
+export const deleteTenant = createServerFn({ method: "POST" })
+  .inputValidator((d: { tenantId: string }) => {
+    if (!d.tenantId) throw new Error("Tenant inválido.");
+    return d;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+    await rollbackTenant(data.tenantId);
+    return { ok: true };
+  });
+
+async function rollbackTenant(tenantId: string) {
+  // Ordem importa só para clareza; service_role bypassa RLS.
+  const tables = [
+    "appointments",
+    "blocked_slots",
+    "customers",
+    "services",
+    "plans",
+    "site_texts",
+    "team_members",
+    "testimonials",
+    "site_settings",
+    "barbers",
+  ] as const;
+  for (const table of tables) {
+    await supabaseAdmin.from(table).delete().eq("tenant_id", tenantId);
+  }
+  await supabaseAdmin.from("tenants").delete().eq("id", tenantId);
+}
 
 /**
  * Clona conteúdo do tenant template para o novo tenant usando service_role.
