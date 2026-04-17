@@ -233,7 +233,7 @@ function PainelPage() {
               </TabsContent>
               <TabsContent value="users" className="mt-6">
                 <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
-                  <p><span className="font-semibold text-foreground">Logins / Acessos</span> — cria contas de <strong>email + senha</strong> para barbeiros entrarem no painel e receberem agendamentos (aparecem na escolha do profissional em /agendar). Para mostrar essa pessoa na vitrine pública com foto, cadastre também em <em>Vitrine do site</em>.</p>
+                  <p><span className="font-semibold text-foreground">Logins / Acessos</span> — cria contas de <strong>email + senha</strong> para barbeiros entrarem no painel e receberem agendamentos (aparecem na escolha do profissional em /agendar). Para mostrar essa pessoa em <em>Membros</em> com foto, edite lá também.</p>
                 </div>
                 <UsersAdmin currentUserId={user.id} />
               </TabsContent>
