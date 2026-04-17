@@ -12,6 +12,8 @@ import { ServicesAdmin } from "@/components/admin/ServicesAdmin";
 import { PlansAdmin } from "@/components/admin/PlansAdmin";
 import { UsersAdmin } from "@/components/admin/UsersAdmin";
 import { SiteSettingsAdmin } from "@/components/admin/SiteSettingsAdmin";
+import { SiteTextsAdmin } from "@/components/admin/SiteTextsAdmin";
+import { TestimonialsAdmin } from "@/components/admin/TestimonialsAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
 
 type Appointment = {
@@ -160,6 +162,8 @@ function PainelPage() {
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="users">Membros / Acessos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="site">Site</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="texts">Textos</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
           </TabsList>
 
@@ -271,9 +275,21 @@ function PainelPage() {
               </TabsContent>
               <TabsContent value="site" className="mt-6">
                 <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
-                  <p><span className="font-semibold text-foreground">Site</span> — configurações públicas do site, como o link e @arroba do Instagram que aparece no rodapé.</p>
+                  <p><span className="font-semibold text-foreground">Site</span> — identidade, contato, cores, logo e Instagram da barbearia. Tudo aparece nas páginas públicas.</p>
                 </div>
                 <SiteSettingsAdmin />
+              </TabsContent>
+              <TabsContent value="texts" className="mt-6">
+                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Textos</span> — edite os textos das páginas (hero, experiência, CTA, mensagens de agendamento).</p>
+                </div>
+                <SiteTextsAdmin />
+              </TabsContent>
+              <TabsContent value="testimonials" className="mt-6">
+                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Depoimentos</span> — gerencie os depoimentos exibidos na página inicial.</p>
+                </div>
+                <TestimonialsAdmin />
               </TabsContent>
             </>
           )}
