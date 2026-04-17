@@ -39,7 +39,7 @@ export function ServicesAdmin() {
         active: s.active,
       })
       .eq("id", s.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Salvo.");
   }
 
@@ -48,14 +48,14 @@ export function ServicesAdmin() {
     const { error } = await supabase
       .from("services")
       .insert({ slug, name: "Novo serviço", price: 0, duration: 30, display_order: items.length + 1 });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 
   async function remove(id: string) {
     if (!confirm("Excluir este serviço?")) return;
     const { error } = await supabase.from("services").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 

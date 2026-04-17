@@ -37,7 +37,7 @@ export function PlansAdmin() {
         active: p.active,
       })
       .eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Salvo.");
   }
 
@@ -45,14 +45,14 @@ export function PlansAdmin() {
     const { error } = await supabase
       .from("plans")
       .insert({ slug: `novo-${Date.now()}`, name: "Novo plano", price: 0, items: [], display_order: items.length + 1 });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 
   async function remove(id: string) {
     if (!confirm("Excluir este plano?")) return;
     const { error } = await supabase.from("plans").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 

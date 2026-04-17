@@ -39,7 +39,7 @@ export function TeamAdmin() {
         active: m.active,
       })
       .eq("id", m.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Salvo.");
   }
 
@@ -47,14 +47,14 @@ export function TeamAdmin() {
     const { error } = await supabase
       .from("team_members")
       .insert({ name: "Novo barbeiro", role: "Barbeiro", bio: "", icon: "star", display_order: items.length + 1 });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 
   async function remove(id: string) {
     if (!confirm("Excluir membro da equipe?")) return;
     const { error } = await supabase.from("team_members").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void load();
   }
 
