@@ -19,6 +19,13 @@ import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
 import { Route as SuperAdminLoginRouteImport } from './routes/super-admin.login'
+import { Route as BSlugRouteImport } from './routes/b.$slug'
+import { Route as BSlugIndexRouteImport } from './routes/b.$slug.index'
+import { Route as BSlugServicosRouteImport } from './routes/b.$slug.servicos'
+import { Route as BSlugPlanosRouteImport } from './routes/b.$slug.planos'
+import { Route as BSlugMeuAgendamentoRouteImport } from './routes/b.$slug.meu-agendamento'
+import { Route as BSlugEquipeRouteImport } from './routes/b.$slug.equipe'
+import { Route as BSlugAgendarRouteImport } from './routes/b.$slug.agendar'
 
 const ServicosRoute = ServicosRouteImport.update({
   id: '/servicos',
@@ -70,6 +77,41 @@ const SuperAdminLoginRoute = SuperAdminLoginRouteImport.update({
   path: '/super-admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BSlugRoute = BSlugRouteImport.update({
+  id: '/b/$slug',
+  path: '/b/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BSlugIndexRoute = BSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BSlugRoute,
+} as any)
+const BSlugServicosRoute = BSlugServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => BSlugRoute,
+} as any)
+const BSlugPlanosRoute = BSlugPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => BSlugRoute,
+} as any)
+const BSlugMeuAgendamentoRoute = BSlugMeuAgendamentoRouteImport.update({
+  id: '/meu-agendamento',
+  path: '/meu-agendamento',
+  getParentRoute: () => BSlugRoute,
+} as any)
+const BSlugEquipeRoute = BSlugEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => BSlugRoute,
+} as any)
+const BSlugAgendarRoute = BSlugAgendarRouteImport.update({
+  id: '/agendar',
+  path: '/agendar',
+  getParentRoute: () => BSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,8 +122,15 @@ export interface FileRoutesByFullPath {
   '/painel': typeof PainelRoute
   '/planos': typeof PlanosRoute
   '/servicos': typeof ServicosRoute
+  '/b/$slug': typeof BSlugRouteWithChildren
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/b/$slug/agendar': typeof BSlugAgendarRoute
+  '/b/$slug/equipe': typeof BSlugEquipeRoute
+  '/b/$slug/meu-agendamento': typeof BSlugMeuAgendamentoRoute
+  '/b/$slug/planos': typeof BSlugPlanosRoute
+  '/b/$slug/servicos': typeof BSlugServicosRoute
+  '/b/$slug/': typeof BSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +143,12 @@ export interface FileRoutesByTo {
   '/servicos': typeof ServicosRoute
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/b/$slug/agendar': typeof BSlugAgendarRoute
+  '/b/$slug/equipe': typeof BSlugEquipeRoute
+  '/b/$slug/meu-agendamento': typeof BSlugMeuAgendamentoRoute
+  '/b/$slug/planos': typeof BSlugPlanosRoute
+  '/b/$slug/servicos': typeof BSlugServicosRoute
+  '/b/$slug': typeof BSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,8 +160,15 @@ export interface FileRoutesById {
   '/painel': typeof PainelRoute
   '/planos': typeof PlanosRoute
   '/servicos': typeof ServicosRoute
+  '/b/$slug': typeof BSlugRouteWithChildren
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/b/$slug/agendar': typeof BSlugAgendarRoute
+  '/b/$slug/equipe': typeof BSlugEquipeRoute
+  '/b/$slug/meu-agendamento': typeof BSlugMeuAgendamentoRoute
+  '/b/$slug/planos': typeof BSlugPlanosRoute
+  '/b/$slug/servicos': typeof BSlugServicosRoute
+  '/b/$slug/': typeof BSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,8 +181,15 @@ export interface FileRouteTypes {
     | '/painel'
     | '/planos'
     | '/servicos'
+    | '/b/$slug'
     | '/super-admin/login'
     | '/super-admin/'
+    | '/b/$slug/agendar'
+    | '/b/$slug/equipe'
+    | '/b/$slug/meu-agendamento'
+    | '/b/$slug/planos'
+    | '/b/$slug/servicos'
+    | '/b/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +202,12 @@ export interface FileRouteTypes {
     | '/servicos'
     | '/super-admin/login'
     | '/super-admin'
+    | '/b/$slug/agendar'
+    | '/b/$slug/equipe'
+    | '/b/$slug/meu-agendamento'
+    | '/b/$slug/planos'
+    | '/b/$slug/servicos'
+    | '/b/$slug'
   id:
     | '__root__'
     | '/'
@@ -143,8 +218,15 @@ export interface FileRouteTypes {
     | '/painel'
     | '/planos'
     | '/servicos'
+    | '/b/$slug'
     | '/super-admin/login'
     | '/super-admin/'
+    | '/b/$slug/agendar'
+    | '/b/$slug/equipe'
+    | '/b/$slug/meu-agendamento'
+    | '/b/$slug/planos'
+    | '/b/$slug/servicos'
+    | '/b/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,6 +238,7 @@ export interface RootRouteChildren {
   PainelRoute: typeof PainelRoute
   PlanosRoute: typeof PlanosRoute
   ServicosRoute: typeof ServicosRoute
+  BSlugRoute: typeof BSlugRouteWithChildren
   SuperAdminLoginRoute: typeof SuperAdminLoginRoute
   SuperAdminIndexRoute: typeof SuperAdminIndexRoute
 }
@@ -232,8 +315,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b/$slug': {
+      id: '/b/$slug'
+      path: '/b/$slug'
+      fullPath: '/b/$slug'
+      preLoaderRoute: typeof BSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$slug/': {
+      id: '/b/$slug/'
+      path: '/'
+      fullPath: '/b/$slug/'
+      preLoaderRoute: typeof BSlugIndexRouteImport
+      parentRoute: typeof BSlugRoute
+    }
+    '/b/$slug/servicos': {
+      id: '/b/$slug/servicos'
+      path: '/servicos'
+      fullPath: '/b/$slug/servicos'
+      preLoaderRoute: typeof BSlugServicosRouteImport
+      parentRoute: typeof BSlugRoute
+    }
+    '/b/$slug/planos': {
+      id: '/b/$slug/planos'
+      path: '/planos'
+      fullPath: '/b/$slug/planos'
+      preLoaderRoute: typeof BSlugPlanosRouteImport
+      parentRoute: typeof BSlugRoute
+    }
+    '/b/$slug/meu-agendamento': {
+      id: '/b/$slug/meu-agendamento'
+      path: '/meu-agendamento'
+      fullPath: '/b/$slug/meu-agendamento'
+      preLoaderRoute: typeof BSlugMeuAgendamentoRouteImport
+      parentRoute: typeof BSlugRoute
+    }
+    '/b/$slug/equipe': {
+      id: '/b/$slug/equipe'
+      path: '/equipe'
+      fullPath: '/b/$slug/equipe'
+      preLoaderRoute: typeof BSlugEquipeRouteImport
+      parentRoute: typeof BSlugRoute
+    }
+    '/b/$slug/agendar': {
+      id: '/b/$slug/agendar'
+      path: '/agendar'
+      fullPath: '/b/$slug/agendar'
+      preLoaderRoute: typeof BSlugAgendarRouteImport
+      parentRoute: typeof BSlugRoute
+    }
   }
 }
+
+interface BSlugRouteChildren {
+  BSlugAgendarRoute: typeof BSlugAgendarRoute
+  BSlugEquipeRoute: typeof BSlugEquipeRoute
+  BSlugMeuAgendamentoRoute: typeof BSlugMeuAgendamentoRoute
+  BSlugPlanosRoute: typeof BSlugPlanosRoute
+  BSlugServicosRoute: typeof BSlugServicosRoute
+  BSlugIndexRoute: typeof BSlugIndexRoute
+}
+
+const BSlugRouteChildren: BSlugRouteChildren = {
+  BSlugAgendarRoute: BSlugAgendarRoute,
+  BSlugEquipeRoute: BSlugEquipeRoute,
+  BSlugMeuAgendamentoRoute: BSlugMeuAgendamentoRoute,
+  BSlugPlanosRoute: BSlugPlanosRoute,
+  BSlugServicosRoute: BSlugServicosRoute,
+  BSlugIndexRoute: BSlugIndexRoute,
+}
+
+const BSlugRouteWithChildren = BSlugRoute._addFileChildren(BSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -244,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   PainelRoute: PainelRoute,
   PlanosRoute: PlanosRoute,
   ServicosRoute: ServicosRoute,
+  BSlugRoute: BSlugRouteWithChildren,
   SuperAdminLoginRoute: SuperAdminLoginRoute,
   SuperAdminIndexRoute: SuperAdminIndexRoute,
 }

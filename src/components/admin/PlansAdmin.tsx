@@ -15,7 +15,8 @@ export function PlansAdmin() {
   async function load() {
     setLoading(true);
     try {
-      setItems(await fetchPlans(true));
+      const tenantId = await getCurrentTenantId();
+      setItems(await fetchPlans(tenantId, true));
     } catch {
       toast.error("Erro ao carregar planos.");
     } finally {
