@@ -194,7 +194,7 @@ function AgendarPage() {
 
             <div className="mt-6 flex flex-col gap-2.5">
               <a
-                href={waUrl}
+                href={confirmed.waUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-gradient-gold px-5 py-3 text-sm font-semibold text-primary-foreground shadow-gold hover:scale-[1.02] transition"
