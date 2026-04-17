@@ -166,7 +166,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
 
       {!loading && withoutLogin.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-display text-base font-semibold text-amber-400">
+          <h3 className="font-display text-base font-semibold text-gold">
             Barbeiros sem login ({withoutLogin.length})
           </h3>
           <p className="text-xs text-muted-foreground">
