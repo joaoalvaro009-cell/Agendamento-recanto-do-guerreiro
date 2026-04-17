@@ -226,9 +226,15 @@ function PainelPage() {
                 <PlansAdmin />
               </TabsContent>
               <TabsContent value="team" className="mt-6">
+                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Vitrine do site</span> — controla quem aparece como membro da equipe na home e na página pública. Aqui você define <strong>foto, função e bio</strong> que o cliente vê. Não cria login.</p>
+                </div>
                 <TeamAdmin />
               </TabsContent>
               <TabsContent value="users" className="mt-6">
+                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Logins / Acessos</span> — cria contas de <strong>email + senha</strong> para barbeiros entrarem no painel e receberem agendamentos (aparecem na escolha do profissional em /agendar). Para mostrar essa pessoa na vitrine pública com foto, cadastre também em <em>Vitrine do site</em>.</p>
+                </div>
                 <UsersAdmin currentUserId={user.id} />
               </TabsContent>
             </>
