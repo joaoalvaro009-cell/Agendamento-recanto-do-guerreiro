@@ -367,7 +367,7 @@ function MemberCard({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [linking, setLinking] = useState(false);
-  const [linkForm, setLinkForm] = useState({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
+  const [linkForm, setLinkForm] = useState({ email: row.email ?? onlyDigits(row.phone), password: "", isAdmin: row.is_admin });
 
   // Só recarrega o form quando muda de barbeiro (id diferente).
   // Não pode depender do objeto `row` inteiro, senão sobrescreve o que o usuário digita
@@ -379,7 +379,7 @@ function MemberCard({
     setBio(row.public_bio);
     setIcon(row.public_icon || "star");
     setImageUrl(row.public_image_url);
-    setLinkForm({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
+    setLinkForm({ email: row.email ?? onlyDigits(row.phone), password: "", isAdmin: row.is_admin });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row.id]);
 
@@ -412,9 +412,13 @@ function MemberCard({
   }
 
   async function handleLink() {
-    const email = linkForm.email.trim() || phoneToEmail(phone);
-    if (!linkForm.password) {
-      toast.error("Senha é obrigatória.");
+    const raw = linkForm.email.trim();
+    // Aceita telefone OU email. Se não tiver "@", converte número em email interno.
+    const email = raw
+      ? (raw.includes("@") ? raw : phoneToEmail(raw))
+      : phoneToEmail(phone);
+    if (!linkForm.password || linkForm.password.length < 4) {
+      toast.error("Senha precisa ter ao menos 4 caracteres.");
       return;
     }
     try {
@@ -520,8 +524,15 @@ function MemberCard({
           {linking && !row.user_id && (
             <div className="mt-2 grid gap-2 rounded-xl border border-gold/30 bg-background/40 p-3 sm:grid-cols-2">
               <div>
-                <Label className="text-xs">Email (login)</Label>
-                <Input type="email" value={linkForm.email} onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })} placeholder={phoneToEmail(phone)} />
+                <Label className="text-xs">Telefone ou email (login)</Label>
+                <Input
+                  value={linkForm.email}
+                  onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })}
+                  placeholder={`${onlyDigits(phone) || "número do WhatsApp"} ou email`}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Pode ser só o número do WhatsApp (recomendado) ou um email.
+                </p>
               </div>
               <div>
                 <Label className="text-xs">Senha (mín 4)</Label>
