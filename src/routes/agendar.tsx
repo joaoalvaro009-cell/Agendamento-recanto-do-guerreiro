@@ -142,13 +142,7 @@ function AgendarPage() {
       return;
     }
 
-    setConfirmed({
-      code: confirmationCode,
-      barberPhone: barber.phone,
-      barberName: barber.name,
-      waUrl: "",
-    });
-    // Monta a mensagem agora (state name/phone/etc. ainda válidos)
+    // Monta a mensagem do WhatsApp já com os dados do agendamento
     const waMessage =
       `🔔 *Novo agendamento — Recanto do Guerreiro*\n\n` +
       `Cliente: ${name}\n` +
@@ -171,17 +165,6 @@ function AgendarPage() {
   }
 
   if (confirmed) {
-    const message =
-      `🔔 *Novo agendamento — Recanto do Guerreiro*\n\n` +
-      `Cliente: ${name}\n` +
-      `WhatsApp: ${formatPhoneBR(onlyDigits(phone))}\n` +
-      `Serviço: ${service?.name} — R$ ${service?.price.toFixed(2).replace(".", ",")}\n` +
-      `Data: ${date ? formatDatePretty(date) : ""} às ${time}\n` +
-      `Barbeiro: ${confirmed.barberName}\n` +
-      `Código: ${confirmed.code.slice(0, 8).toUpperCase()}`;
-
-    const waUrl = whatsAppLink(confirmed.barberPhone, message);
-
     return (
       <SiteLayout>
         <section className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">
