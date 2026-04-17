@@ -12,6 +12,7 @@ type Settings = {
   instagram_handle: string;
   instagram_url: string;
   logo_url: string | null;
+  logo_size: "small" | "medium" | "large";
 };
 
 export function SiteSettingsAdmin() {
@@ -24,13 +25,19 @@ export function SiteSettingsAdmin() {
     setLoading(true);
     const { data, error } = await supabase
       .from("site_settings")
-      .select("id, instagram_handle, instagram_url, logo_url")
+      .select("id, instagram_handle, instagram_url, logo_url, logo_size")
       .limit(1)
       .maybeSingle();
     if (error) {
       toast.error("Erro ao carregar configurações.");
     } else if (data) {
-      setSettings(data);
+      setSettings({
+        id: data.id,
+        instagram_handle: data.instagram_handle,
+        instagram_url: data.instagram_url,
+        logo_url: data.logo_url,
+        logo_size: ((data as { logo_size?: string }).logo_size as Settings["logo_size"]) ?? "medium",
+      });
     }
     setLoading(false);
   }
@@ -62,6 +69,7 @@ export function SiteSettingsAdmin() {
         instagram_handle: settings.instagram_handle,
         instagram_url: settings.instagram_url,
         logo_url: settings.logo_url,
+        logo_size: settings.logo_size,
       })
       .eq("id", settings.id);
     setSaving(false);
@@ -115,6 +123,29 @@ export function SiteSettingsAdmin() {
                 <Trash2 className="h-3 w-3" /> Remover logo
               </Button>
             )}
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-border/40 pt-4">
+          <Label className="text-xs">Tamanho da logo no site</Label>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Define o quão grande a logo aparece no <strong>topo</strong> e no <strong>rodapé</strong>. Após salvar, recarregue o site público para ver a mudança.
+          </p>
+          <div className="mt-3 inline-flex rounded-full border border-border/60 bg-background/40 p-1">
+            {(["small", "medium", "large"] as const).map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setSettings({ ...settings, logo_size: size })}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                  settings.logo_size === size
+                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {size === "small" ? "Pequena" : size === "medium" ? "Média" : "Grande"}
+              </button>
+            ))}
           </div>
         </div>
       </div>

@@ -243,6 +243,7 @@ export type Database = {
           id: string
           instagram_handle: string
           instagram_url: string
+          logo_size: string
           logo_url: string | null
           updated_at: string
         }
@@ -251,6 +252,7 @@ export type Database = {
           id?: string
           instagram_handle?: string
           instagram_url?: string
+          logo_size?: string
           logo_url?: string | null
           updated_at?: string
         }
@@ -259,6 +261,7 @@ export type Database = {
           id?: string
           instagram_handle?: string
           instagram_url?: string
+          logo_size?: string
           logo_url?: string | null
           updated_at?: string
         }

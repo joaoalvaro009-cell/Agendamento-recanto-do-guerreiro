@@ -5,6 +5,12 @@ import logo from "@/assets/logo.png";
 import { SHOP } from "@/lib/constants";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
+const NAV_LOGO_SIZE: Record<"small" | "medium" | "large", string> = {
+  small: "h-8 w-auto max-w-[140px] object-contain",
+  medium: "h-11 w-auto max-w-[180px] object-contain",
+  large: "h-14 w-auto max-w-[240px] object-contain",
+};
+
 const links = [
   { to: "/", label: "Início" },
   { to: "/servicos", label: "Serviços" },
@@ -15,7 +21,7 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { logo_url } = useSiteSettings();
+  const { logo_url, logo_size } = useSiteSettings();
   const logoSrc = logo_url || logo;
   const hasCustomLogo = Boolean(logo_url);
 
@@ -26,7 +32,7 @@ export function Navbar() {
           <img
             src={logoSrc}
             alt={`Logo ${SHOP.name}`}
-            className={hasCustomLogo ? "h-11 w-auto max-w-[180px] object-contain" : "h-9 w-9"}
+            className={hasCustomLogo ? NAV_LOGO_SIZE[logo_size] : "h-9 w-9"}
             width={hasCustomLogo ? undefined : 36}
             height={hasCustomLogo ? undefined : 36}
           />
