@@ -366,6 +366,9 @@ function MemberCard({
   const [linking, setLinking] = useState(false);
   const [linkForm, setLinkForm] = useState({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
 
+  // Só recarrega o form quando muda de barbeiro (id diferente).
+  // Não pode depender do objeto `row` inteiro, senão sobrescreve o que o usuário digita
+  // toda vez que o pai recria o array em re-renders.
   useEffect(() => {
     setName(row.name);
     setPhone(row.phone);
@@ -374,7 +377,8 @@ function MemberCard({
     setIcon(row.public_icon || "star");
     setImageUrl(row.public_image_url);
     setLinkForm({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
-  }, [row]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row.id]);
 
   async function handleUpload(file: File) {
     setUploading(true);
