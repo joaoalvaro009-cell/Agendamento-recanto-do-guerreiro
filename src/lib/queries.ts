@@ -67,6 +67,23 @@ export async function fetchTeam(includeInactive = false): Promise<TeamRow[]> {
   return (data ?? []) as TeamRow[];
 }
 
+let _cachedTenantId: string | null = null;
+export async function getCurrentTenantId(): Promise<string> {
+  if (_cachedTenantId) return _cachedTenantId;
+  const { data, error } = await supabase.rpc("current_tenant_id");
+  if (error) throw error;
+  if (!data) throw new Error("Tenant não encontrado para este usuário.");
+  _cachedTenantId = data as string;
+  return _cachedTenantId;
+}
+
+export async function getTenantIdBySlug(slug: string): Promise<string> {
+  const { data, error } = await supabase.rpc("tenant_id_by_slug", { _slug: slug });
+  if (error) throw error;
+  if (!data) throw new Error("Tenant não encontrado.");
+  return data as string;
+}
+
 export async function uploadSiteImage(file: File, folder: string): Promise<string> {
   const ext = file.name.split(".").pop() ?? "jpg";
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
