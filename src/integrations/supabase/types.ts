@@ -187,6 +187,54 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          channel_email: boolean
+          channel_whatsapp: boolean
+          contact_email: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          id: string
+          notify_cancellation: boolean
+          notify_new_booking: boolean
+          reminder_10m: boolean
+          reminder_1h: boolean
+          reminder_24h: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_email?: boolean
+          channel_whatsapp?: boolean
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          notify_cancellation?: boolean
+          notify_new_booking?: boolean
+          reminder_10m?: boolean
+          reminder_1h?: boolean
+          reminder_24h?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_email?: boolean
+          channel_whatsapp?: boolean
+          contact_email?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          notify_cancellation?: boolean
+          notify_new_booking?: boolean
+          reminder_10m?: boolean
+          reminder_1h?: boolean
+          reminder_24h?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           active: boolean
