@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { TOLERANCE_NOTICE, formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
 import { formatDateISO, formatDatePretty, getAvailableDates, getSlotsForDate } from "@/lib/booking";
-import { fetchServices, type ServiceRow } from "@/lib/queries";
+import { fetchServices, fetchTeam, type ServiceRow } from "@/lib/queries";
 
 export const Route = createFileRoute("/agendar")({
   head: () => ({
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/agendar")({
   component: AgendarPage,
 });
 
-type Barber = { id: string; name: string; phone: string };
+type Barber = { id: string; name: string; phone: string; image_url?: string | null };
 
 const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"] as const;
 
@@ -57,20 +57,27 @@ function AgendarPage() {
     fetchServices().then(setServices).catch(() => toast.error("Não foi possível carregar serviços."));
   }, []);
 
-  // Load barbers
+  // Load barbers + team photos (team_members é a fonte da imagem pública)
   useEffect(() => {
-    void supabase
-      .from("barbers")
-      .select("id, name, phone")
-      .eq("active", true)
-      .order("display_order")
-      .then(({ data, error }) => {
-        if (error) {
-          toast.error("Não foi possível carregar os barbeiros.");
-          return;
-        }
-        setBarbers(data ?? []);
-      });
+    void (async () => {
+      const [barbersRes, team] = await Promise.all([
+        supabase.from("barbers").select("id, name, phone").eq("active", true).order("display_order"),
+        fetchTeam().catch(() => []),
+      ]);
+      if (barbersRes.error) {
+        toast.error("Não foi possível carregar os barbeiros.");
+        return;
+      }
+      const photoByName = new Map(
+        team.map((t) => [t.name.trim().toLowerCase(), t.image_url] as const),
+      );
+      setBarbers(
+        (barbersRes.data ?? []).map((b) => ({
+          ...b,
+          image_url: photoByName.get(b.name.trim().toLowerCase()) ?? null,
+        })),
+      );
+    })();
   }, []);
 
   // Load taken slots when date+barber selected
@@ -282,9 +289,17 @@ function AgendarPage() {
                         : "border-border/60 bg-background/30 hover:border-gold/50"
                     }`}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-gold font-display text-lg font-semibold text-primary-foreground shadow-gold">
-                      {b.name[0]}
-                    </div>
+                    {b.image_url ? (
+                      <img
+                        src={b.image_url}
+                        alt={`Foto do barbeiro ${b.name}`}
+                        className="h-12 w-12 rounded-full object-cover ring-2 ring-gold/60 shadow-gold"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-gold font-display text-lg font-semibold text-primary-foreground shadow-gold">
+                        {b.name[0]}
+                      </div>
+                    )}
                     <div>
                       <div className="font-semibold">{b.name}</div>
                       <div className="text-xs text-muted-foreground">Recanto do Guerreiro</div>
