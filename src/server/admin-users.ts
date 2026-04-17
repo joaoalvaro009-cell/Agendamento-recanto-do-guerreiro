@@ -12,6 +12,22 @@ async function assertAdmin(userId: string) {
   if (!isAdmin) throw new Error("Acesso negado: apenas administradores.");
 }
 
+async function getTenantIdForUser(userId: string): Promise<string> {
+  const { data: barber } = await supabaseAdmin
+    .from("barbers")
+    .select("tenant_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (barber?.tenant_id) return barber.tenant_id;
+  const { data: tenant } = await supabaseAdmin
+    .from("tenants")
+    .select("id")
+    .eq("owner_user_id", userId)
+    .maybeSingle();
+  if (tenant?.id) return tenant.id;
+  throw new Error("Tenant não encontrado para o usuário.");
+}
+
 export const createBarberUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
