@@ -11,6 +11,7 @@ import { formatPhoneBR, whatsAppLink } from "@/lib/constants";
 import { ServicesAdmin } from "@/components/admin/ServicesAdmin";
 import { PlansAdmin } from "@/components/admin/PlansAdmin";
 import { UsersAdmin } from "@/components/admin/UsersAdmin";
+import { SiteSettingsAdmin } from "@/components/admin/SiteSettingsAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
 
 type Appointment = {
