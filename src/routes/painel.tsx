@@ -227,7 +227,7 @@ function PainelPage() {
               </TabsContent>
               <TabsContent value="team" className="mt-6">
                 <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
-                  <p><span className="font-semibold text-foreground">Vitrine do site</span> — controla quem aparece como membro da equipe na home e na página pública. Aqui você define <strong>foto, função e bio</strong> que o cliente vê. Não cria login.</p>
+                  <p><span className="font-semibold text-foreground">Membros</span> — controla quem aparece como membro da equipe na home e na página pública. Aqui você define <strong>foto, função e bio</strong> que o cliente vê. Não cria login.</p>
                 </div>
                 <TeamAdmin />
               </TabsContent>
