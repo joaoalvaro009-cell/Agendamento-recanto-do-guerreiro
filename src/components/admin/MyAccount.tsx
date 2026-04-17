@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { supabase } from "@/integrations/supabase/client";
 import { onlyDigits, formatPhoneBR } from "@/lib/constants";
+import { updateMyLogin, updateMyPassword } from "@/server/admin-users";
 
 function phoneToEmail(phone: string): string {
   return `${onlyDigits(phone)}@recantodoguerreiro.local`;
@@ -21,7 +23,10 @@ function prettyCurrentLogin(email: string): string {
   return email;
 }
 
-export function MyAccount({ currentEmail }: { currentEmail: string }) {
+export function MyAccount({ currentEmail, onLoginChanged }: { currentEmail: string; onLoginChanged?: (newEmail: string) => void }) {
+  const updateMyLoginFn = useServerFn(updateMyLogin);
+  const updateMyPasswordFn = useServerFn(updateMyPassword);
+
   const [loginType, setLoginType] = useState<"phone" | "email">(
     currentEmail.endsWith(INTERNAL_DOMAIN) ? "phone" : "email",
   );
@@ -30,6 +35,12 @@ export function MyAccount({ currentEmail }: { currentEmail: string }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingLogin, setSavingLogin] = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
+
+  async function getAuthHeaders() {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return { authorization: `Bearer ${token ?? ""}` };
+  }
 
   async function changeLogin() {
     const raw = newLogin.trim();
@@ -50,27 +61,38 @@ export function MyAccount({ currentEmail }: { currentEmail: string }) {
     }
 
     setSavingLogin(true);
-    const { error } = await supabase.auth.updateUser({ email: nextEmail });
-    setSavingLogin(false);
-    if (error) return toast.error(error.message);
-    setNewLogin("");
-    toast.success(
-      loginType === "phone"
-        ? "Login (WhatsApp) atualizado. Use o novo número no próximo acesso."
-        : "Email atualizado. Verifique sua caixa de entrada se for solicitado.",
-    );
+    try {
+      await updateMyLoginFn({ headers: await getAuthHeaders(), data: { newEmail: nextEmail } });
+      // Refresca a sessão para o novo email aparecer
+      await supabase.auth.refreshSession();
+      setNewLogin("");
+      onLoginChanged?.(nextEmail);
+      toast.success(
+        loginType === "phone"
+          ? "Login (WhatsApp) atualizado. Use o novo número no próximo acesso."
+          : "Email de login atualizado.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao atualizar login.");
+    } finally {
+      setSavingLogin(false);
+    }
   }
 
   async function changePassword() {
     if (password.length < 4) return toast.error("Senha precisa ter ao menos 4 caracteres.");
     if (password !== confirmPassword) return toast.error("As senhas não coincidem.");
     setSavingPwd(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setSavingPwd(false);
-    if (error) return toast.error(error.message);
-    setPassword("");
-    setConfirmPassword("");
-    toast.success("Senha alterada.");
+    try {
+      await updateMyPasswordFn({ headers: await getAuthHeaders(), data: { newPassword: password } });
+      setPassword("");
+      setConfirmPassword("");
+      toast.success("Senha alterada.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao alterar senha.");
+    } finally {
+      setSavingPwd(false);
+    }
   }
 
   return (
