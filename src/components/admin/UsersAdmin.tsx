@@ -412,9 +412,13 @@ function MemberCard({
   }
 
   async function handleLink() {
-    const email = linkForm.email.trim() || phoneToEmail(phone);
-    if (!linkForm.password) {
-      toast.error("Senha é obrigatória.");
+    const raw = linkForm.email.trim();
+    // Aceita telefone OU email. Se não tiver "@", converte número em email interno.
+    const email = raw
+      ? (raw.includes("@") ? raw : phoneToEmail(raw))
+      : phoneToEmail(phone);
+    if (!linkForm.password || linkForm.password.length < 4) {
+      toast.error("Senha precisa ter ao menos 4 caracteres.");
       return;
     }
     try {
