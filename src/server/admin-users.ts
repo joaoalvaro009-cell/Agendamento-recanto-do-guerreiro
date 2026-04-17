@@ -121,6 +121,38 @@ export const updateUserPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Self-service: any logged-in user can change their own login (email/phone). */
+export const updateMyLogin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { newEmail: string }) => {
+    if (!d.newEmail.includes("@") || d.newEmail.length < 5) throw new Error("Login inválido.");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      email: data.newEmail,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("barbers").update({ email: data.newEmail }).eq("user_id", context.userId);
+    return { ok: true };
+  });
+
+/** Self-service: any logged-in user can change their own password. */
+export const updateMyPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { newPassword: string }) => {
+    if (d.newPassword.length < 4) throw new Error("Senha precisa ter ao menos 4 caracteres.");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      password: data.newPassword,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const setBarberActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { barberId: string; teamMemberId?: string | null; active: boolean }) => d)
