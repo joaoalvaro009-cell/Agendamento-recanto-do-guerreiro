@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
+import { TOLERANCE_NOTICE, formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
 import { formatDateISO, formatDatePretty, getAvailableDates, getSlotsForDate } from "@/lib/booking";
 import { fetchServices, fetchTeam, type ServiceRow } from "@/lib/queries";
-import { getTenantText, useTenant } from "@/hooks/use-tenant";
 
 export const Route = createFileRoute("/agendar")({
   head: () => ({
@@ -29,8 +28,6 @@ type Barber = { id: string; name: string; phone: string; image_url?: string | nu
 const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"] as const;
 
 function AgendarPage() {
-  const tenant = useTenant();
-  const toleranceNotice = getTenantText(tenant, "tolerance_notice", "");
   const [step, setStep] = useState(0);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [barberId, setBarberId] = useState<string | null>(null);
@@ -192,7 +189,7 @@ function AgendarPage() {
             </div>
 
             <div className="mt-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left text-xs text-foreground/80">
-              {toleranceNotice}
+              {TOLERANCE_NOTICE}
             </div>
 
             <div className="mt-6 flex flex-col gap-2.5">
@@ -466,7 +463,7 @@ function AgendarPage() {
                   </ul>
                 </div>
 
-                <p className="text-xs text-muted-foreground">{toleranceNotice}</p>
+                <p className="text-xs text-muted-foreground">{TOLERANCE_NOTICE}</p>
 
                 <Button
                   onClick={handleConfirm}

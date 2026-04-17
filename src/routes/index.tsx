@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Calendar, Check, ChevronRight, Clock, MapPin, Scissors, Sparkles, Star } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
+import { SHOP } from "@/lib/constants";
 import { fetchTeam, fetchPlans, fetchServices, type TeamRow, type PlanRow, type ServiceRow } from "@/lib/queries";
-import { fetchTestimonials, type TestimonialRow } from "@/lib/queries-content";
-import { getTenantText, useTenant } from "@/hooks/use-tenant";
 import hero from "@/assets/hero-barbershop.jpg";
 import brunoFallback from "@/assets/barber-bruno.jpg";
 import pedrinhoFallback from "@/assets/barber-pedrinho.jpg";
@@ -34,70 +33,42 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+const testimonials = [
+  { name: "Lucas M.", text: "Melhor barbearia da região. Atendimento impecável e ambiente top.", rating: 5 },
+  { name: "Felipe R.", text: "Bruno é mestre na tesoura. Saio sempre satisfeito e elogiado.", rating: 5 },
+  { name: "André S.", text: "Pedrinho manda muito na barba. Recomendo de olhos fechados.", rating: 5 },
+];
+
 function Home() {
-  const t = useTenant();
   const [team, setTeam] = useState<TeamRow[]>([]);
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
-  const [testimonials, setTestimonials] = useState<TestimonialRow[]>([]);
-
   useEffect(() => {
     fetchTeam().then(setTeam).catch(() => {});
     fetchPlans().then(setPlans).catch(() => {});
     fetchServices().then(setServices).catch(() => {});
-    fetchTestimonials().then(setTestimonials).catch(() => {});
   }, []);
-
-  const heroTitle = getTenantText(t, "hero_title", t.shop_name);
-  const heroHighlight = getTenantText(t, "hero_highlight", "");
-  const heroSubtitle = getTenantText(t, "hero_subtitle", "");
-  const heroBadge = getTenantText(t, "hero_badge", "Barbearia premium");
-  const expTitle = getTenantText(t, "experience_title", "Mais que um corte. Um ritual.");
-  const expText = getTenantText(t, "experience_text", "");
-  const expBullets = [
-    getTenantText(t, "experience_bullet_1", ""),
-    getTenantText(t, "experience_bullet_2", ""),
-    getTenantText(t, "experience_bullet_3", ""),
-  ].filter(Boolean);
-  const ctaTitle = getTenantText(t, "cta_title", "Pronto para o seu próximo corte?");
-  const ctaSubtitle = getTenantText(t, "cta_subtitle", "Reserve seu horário online em menos de 1 minuto.");
-
-  // Renders heroTitle highlighting `heroHighlight` in gold (case-sensitive).
-  const renderHeroTitle = () => {
-    if (!heroHighlight || !heroTitle.includes(heroHighlight)) {
-      return heroTitle;
-    }
-    const [before, ...rest] = heroTitle.split(heroHighlight);
-    const after = rest.join(heroHighlight);
-    return (
-      <>
-        {before}
-        <span className="text-gradient-gold">{heroHighlight}</span>
-        {after}
-      </>
-    );
-  };
 
   return (
     <SiteLayout>
       {/* HERO */}
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <img src={hero} alt={`Interior premium da barbearia ${t.shop_name}`} className="h-full w-full object-cover" />
+          <img src={hero} alt="Interior premium da barbearia Recanto do Guerreiro" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/60 to-background" />
         </div>
 
         <div className="mx-auto flex min-h-[88vh] max-w-6xl flex-col justify-center px-4 py-20 sm:px-6">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
-              <Sparkles className="h-3 w-3" /> {heroBadge} · {t.city}
+              <Sparkles className="h-3 w-3" /> Barbearia premium · {SHOP.city}
             </p>
             <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">
-              {renderHeroTitle()}
+              Recanto do <span className="text-gradient-gold">Guerreiro</span>
             </h1>
-            {heroSubtitle && (
-              <p className="mt-5 max-w-lg text-lg text-foreground/80">{heroSubtitle}</p>
-            )}
+            <p className="mt-5 max-w-lg text-lg text-foreground/80">
+              Onde tradição encontra precisão. Cortes impecáveis, barba na navalha e a experiência que todo guerreiro merece.
+            </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -115,8 +86,8 @@ function Home() {
             </div>
 
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-gold" /> {t.hours_text}</div>
-              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {t.address}</div>
+              <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-gold" /> Ter–Sáb · 08:00–19:00</div>
+              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {SHOP.address}</div>
             </div>
           </div>
         </div>
@@ -230,51 +201,51 @@ function Home() {
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">A experiência</p>
-            <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">{expTitle}</h2>
-            {expText && <p className="mt-4 text-muted-foreground">{expText}</p>}
-            {expBullets.length > 0 && (
-              <ul className="mt-6 space-y-3 text-sm">
-                {expBullets.map((b) => (
-                  <li key={b} className="flex items-center gap-2"><Check className="h-4 w-4 text-gold" /> {b}</li>
-                ))}
-              </ul>
-            )}
+            <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">
+              Mais que um corte. Um ritual.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Ambiente acolhedor, atendimento individual, toalha quente, ferramentas profissionais. Tudo pensado para que você saia com mais do que uma boa aparência — saia com confiança.
+            </p>
+            <ul className="mt-6 space-y-3 text-sm">
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold" /> Pontualidade respeitada</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold" /> Higiene impecável</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold" /> Atendimento exclusivo</li>
+            </ul>
           </div>
         </div>
       </section>
 
       {/* TESTIMONIALS */}
-      {testimonials.length > 0 && (
-        <section className="bg-surface/30 py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Depoimentos</p>
-              <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">O que dizem nossos clientes</h2>
-            </div>
-            <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {testimonials.map((tt) => (
-                <figure key={tt.id} className="rounded-2xl border border-border/60 bg-surface/60 p-6 shadow-card">
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: tt.rating }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-gold text-gold" />
-                    ))}
-                  </div>
-                  <blockquote className="mt-3 text-sm leading-relaxed text-foreground/90">"{tt.text}"</blockquote>
-                  <figcaption className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    — {tt.customer_name}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+      <section className="bg-surface/30 py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Depoimentos</p>
+            <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">O que dizem nossos clientes</h2>
           </div>
-        </section>
-      )}
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {testimonials.map((t) => (
+              <figure key={t.name} className="rounded-2xl border border-border/60 bg-surface/60 p-6 shadow-card">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.rating }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-gold text-gold" />
+                  ))}
+                </div>
+                <blockquote className="mt-3 text-sm leading-relaxed text-foreground/90">"{t.text}"</blockquote>
+                <figcaption className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  — {t.name}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-4 py-20 sm:px-6">
         <div className="relative overflow-hidden rounded-3xl border border-gold/40 bg-gradient-to-br from-surface-elevated to-surface p-10 text-center shadow-gold sm:p-14">
-          <h2 className="font-display text-3xl font-semibold sm:text-4xl">{ctaTitle}</h2>
-          <p className="mt-3 text-muted-foreground">{ctaSubtitle}</p>
+          <h2 className="font-display text-3xl font-semibold sm:text-4xl">Pronto para o seu próximo corte?</h2>
+          <p className="mt-3 text-muted-foreground">Reserve seu horário online em menos de 1 minuto.</p>
           <Link
             to="/agendar"
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-gold transition hover:scale-[1.03]"
