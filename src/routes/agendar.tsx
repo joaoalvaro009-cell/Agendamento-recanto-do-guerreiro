@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { TOLERANCE_NOTICE, formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
+import { formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
 import { formatDateISO, formatDatePretty, getAvailableDates, getSlotsForDate } from "@/lib/booking";
 import { fetchServices, fetchTeam, type ServiceRow } from "@/lib/queries";
+import { getTenantText, useTenant } from "@/hooks/use-tenant";
 
 export const Route = createFileRoute("/agendar")({
   head: () => ({
