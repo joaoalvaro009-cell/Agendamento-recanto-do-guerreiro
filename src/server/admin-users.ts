@@ -125,3 +125,48 @@ export const listBarberUsers = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { barbers: barbers ?? [] };
   });
+
+export const linkLoginToBarber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { barberId: string; email: string; password: string; isAdmin: boolean }) => {
+    if (!d.email.includes("@")) throw new Error("Email inválido.");
+    if (d.password.length < 8) throw new Error("Senha precisa ter ao menos 8 caracteres.");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+
+    const { data: barber, error: bErr } = await supabaseAdmin
+      .from("barbers")
+      .select("id, user_id, name")
+      .eq("id", data.barberId)
+      .maybeSingle();
+    if (bErr) throw new Error(bErr.message);
+    if (!barber) throw new Error("Barbeiro não encontrado.");
+    if (barber.user_id) throw new Error("Esse barbeiro já tem login conectado.");
+
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    if (!created.user) throw new Error("Falha ao criar usuário.");
+
+    const userId = created.user.id;
+    const { error: uErr } = await supabaseAdmin
+      .from("barbers")
+      .update({ user_id: userId, email: data.email, is_admin: data.isAdmin })
+      .eq("id", data.barberId);
+    if (uErr) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(uErr.message);
+    }
+
+    await supabaseAdmin.from("user_roles").insert({
+      user_id: userId,
+      role: data.isAdmin ? "admin" : "barber",
+    });
+
+    return { userId };
+  });
