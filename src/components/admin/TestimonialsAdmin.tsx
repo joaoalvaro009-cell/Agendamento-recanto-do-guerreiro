@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchTestimonials, type TestimonialRow } from "@/lib/queries-content";
+import { getCurrentTenantId } from "@/lib/tenant-context";
 
 export function TestimonialsAdmin() {
   const [items, setItems] = useState<TestimonialRow[]>([]);
@@ -30,9 +31,10 @@ export function TestimonialsAdmin() {
   }
 
   async function add() {
+    const tenant_id = await getCurrentTenantId();
     const { error } = await supabase
       .from("testimonials")
-      .insert({ customer_name: "Novo cliente", text: "Texto do depoimento", rating: 5, display_order: items.length + 1 });
+      .insert({ tenant_id, customer_name: "Novo cliente", text: "Texto do depoimento", rating: 5, display_order: items.length + 1 });
     if (error) { toast.error(error.message); return; }
     void load();
   }
