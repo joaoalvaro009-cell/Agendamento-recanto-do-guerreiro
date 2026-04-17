@@ -47,6 +47,7 @@ function AgendarPage() {
     code: string;
     barberPhone: string;
     barberName: string;
+    waUrl: string;
   } | null>(null);
 
   const service = services.find((s) => s.id === serviceId);
@@ -145,7 +146,28 @@ function AgendarPage() {
       code: confirmationCode,
       barberPhone: barber.phone,
       barberName: barber.name,
+      waUrl: "",
     });
+    // Monta a mensagem agora (state name/phone/etc. ainda válidos)
+    const waMessage =
+      `🔔 *Novo agendamento — Recanto do Guerreiro*\n\n` +
+      `Cliente: ${name}\n` +
+      `WhatsApp: ${formatPhoneBR(digits)}\n` +
+      `Serviço: ${service.name} — R$ ${service.price.toFixed(2).replace(".", ",")}\n` +
+      `Data: ${formatDatePretty(date)} às ${time}\n` +
+      `Barbeiro: ${barber.name}\n` +
+      `Código: ${confirmationCode.slice(0, 8).toUpperCase()}`;
+    const url = whatsAppLink(barber.phone, waMessage);
+    setConfirmed({
+      code: confirmationCode,
+      barberPhone: barber.phone,
+      barberName: barber.name,
+      waUrl: url,
+    });
+    // Abre o WhatsApp automaticamente em nova aba (não bloqueia se popup for negado)
+    setTimeout(() => {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }, 600);
   }
 
   if (confirmed) {
