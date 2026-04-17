@@ -379,7 +379,7 @@ function MemberCard({
     setBio(row.public_bio);
     setIcon(row.public_icon || "star");
     setImageUrl(row.public_image_url);
-    setLinkForm({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
+    setLinkForm({ email: row.email ?? onlyDigits(row.phone), password: "", isAdmin: row.is_admin });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row.id]);
 
