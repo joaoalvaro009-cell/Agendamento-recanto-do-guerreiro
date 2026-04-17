@@ -276,6 +276,8 @@ function MemberCard({
   onToggleActive: () => void;
   onDelete: () => void;
 }) {
+  const updateMemberProfileFn = useServerFn(updateMemberProfile);
+  const linkLoginToBarberFn = useServerFn(linkLoginToBarber);
   const [name, setName] = useState(row.name);
   const [phone, setPhone] = useState(row.phone);
   const [role, setRole] = useState(row.public_role);
@@ -311,7 +313,7 @@ function MemberCard({
   async function handleSave() {
     setSaving(true);
     try {
-      await updateMemberProfile({
+      await updateMemberProfileFn({
         data: { barberId: row.id, name, phone, role, bio, imageUrl, icon },
       });
       toast.success("Perfil salvo.");
@@ -329,7 +331,7 @@ function MemberCard({
       return;
     }
     try {
-      await linkLoginToBarber({ data: { barberId: row.id, ...linkForm } });
+      await linkLoginToBarberFn({ data: { barberId: row.id, ...linkForm } });
       toast.success("Login conectado.");
       setLinking(false);
       void onReload();
