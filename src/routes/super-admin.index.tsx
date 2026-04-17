@@ -159,26 +159,38 @@ function SuperAdminPage() {
       toast.error("Informe o nome da barbearia.");
       return;
     }
-    const finalSlug = slug.trim() || slugify(name);
-    if (finalSlug.length < 2) {
-      toast.error("Slug inválido.");
+    if (!ownerEmail.includes("@")) {
+      toast.error("Informe um email válido para o dono.");
+      return;
+    }
+    if (ownerPassword.length < 6) {
+      toast.error("A senha temporária precisa ter ao menos 6 caracteres.");
       return;
     }
     setCreating(true);
-    const { error } = await supabase
-      .from("tenants")
-      .insert({ name: name.trim(), slug: finalSlug, plan, active: true });
-    setCreating(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const result = await createTenantWithOwner({
+        data: {
+          name: name.trim(),
+          slug: slug.trim() || undefined,
+          plan,
+          ownerEmail: ownerEmail.trim(),
+          ownerPassword,
+        },
+      });
+      toast.success(`Barbearia "${name.trim()}" criada com conteúdo padrão. Slug: ${result.slug}`);
+      setName("");
+      setSlug("");
+      setPlan("starter");
+      setOwnerEmail("");
+      setOwnerPassword("");
+      setShowNew(false);
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao criar barbearia.");
+    } finally {
+      setCreating(false);
     }
-    toast.success("Barbearia criada.");
-    setName("");
-    setSlug("");
-    setPlan("starter");
-    setShowNew(false);
-    void load();
   }
 
   if (!authChecked) {
