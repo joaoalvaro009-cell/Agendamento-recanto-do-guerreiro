@@ -226,6 +226,9 @@ function PainelPage() {
                       <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {formatDatePretty(new Date(a.appointment_date + "T12:00:00"))}</span>
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {a.appointment_time.slice(0, 5)}</span>
                       <span>{a.service_name} · R$ {Number(a.service_price).toFixed(2).replace(".", ",")}</span>
+                      <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-semibold text-gold">
+                        Barbeiro: {barbersMap[a.barber_id] ?? "—"}
+                      </span>
                     </div>
                   </div>
 
