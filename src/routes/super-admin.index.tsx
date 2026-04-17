@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Building2, ExternalLink, KeyRound, Loader2, LogOut, Mail, Plus, Power, RefreshCw } from "lucide-react";
+import { Building2, ExternalLink, KeyRound, Loader2, LogOut, Mail, Plus, Power, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { createTenantWithOwner, listTenantsWithOwners, resetTenantOwnerPassword } from "@/server/admin-tenants";
+import { createTenantWithOwner, deleteTenant, listTenantsWithOwners, resetTenantOwnerPassword } from "@/server/admin-tenants";
 
 export const Route = createFileRoute("/super-admin/")({
   head: () => ({
@@ -225,6 +225,23 @@ function SuperAdminPage() {
     }
   }
 
+  async function handleDelete(t: Tenant) {
+    const confirmation = window.prompt(
+      `Apagar definitivamente "${t.name}" e TODOS os dados (serviços, planos, agendamentos, equipe)?\n\nDigite o slug "${t.slug}" para confirmar:`,
+    );
+    if (confirmation !== t.slug) {
+      if (confirmation !== null) toast.error("Confirmação não confere. Nada foi apagado.");
+      return;
+    }
+    try {
+      await deleteTenant({ data: { tenantId: t.id } });
+      toast.success(`Barbearia "${t.name}" apagada.`);
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao apagar.");
+    }
+  }
+
   if (!authChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -420,6 +437,15 @@ function SuperAdminPage() {
                   >
                     <Power className="h-3 w-3" />
                     {t.active ? "Desativar" : "Ativar"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => void handleDelete(t)}
+                    title="Apagar barbearia e todos os dados"
+                  >
+                    <Trash2 className="h-3 w-3" /> Excluir
                   </Button>
                 </div>
               </div>
