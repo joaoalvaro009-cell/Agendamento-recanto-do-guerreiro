@@ -33,9 +33,12 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     setLoading(true);
     try {
       const res = await listBarberUsers();
-      setRows(res.barbers as Row[]);
+      const list = Array.isArray(res?.barbers) ? (res.barbers as Row[]) : [];
+      setRows(list);
     } catch (e) {
+      console.error("listBarberUsers failed:", e);
       toast.error(e instanceof Error ? e.message : "Erro ao listar usuários.");
+      setRows([]);
     } finally {
       setLoading(false);
     }
