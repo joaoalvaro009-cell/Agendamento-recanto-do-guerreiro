@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { onlyDigits } from "@/lib/constants";
 import { uploadSiteImage } from "@/lib/queries";
-import { getCurrentTenantId } from "@/lib/tenant-context";
 import {
   createBarberUser,
   deleteBarberUser,
@@ -142,9 +141,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         );
       } else {
         // Cria só o perfil público + barbeiro, sem login
-        const tenant_id = await getCurrentTenantId();
         const { error: bErr } = await supabase.from("barbers").insert({
-          tenant_id,
           name: form.name.trim(),
           phone: phoneDigits,
           email: null,
@@ -155,7 +152,6 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
         });
         if (bErr) throw bErr;
         await supabase.from("team_members").insert({
-          tenant_id,
           name: form.name.trim(),
           role: form.role || "Barbeiro",
           bio: form.bio,

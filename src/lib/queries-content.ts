@@ -16,19 +16,18 @@ export type SiteTextRow = {
   description: string;
 };
 
-export async function fetchTestimonials(tenantId: string, includeInactive = false): Promise<TestimonialRow[]> {
-  let q = supabase.from("testimonials").select("*").eq("tenant_id", tenantId).order("display_order");
+export async function fetchTestimonials(includeInactive = false): Promise<TestimonialRow[]> {
+  let q = supabase.from("testimonials").select("*").order("display_order");
   if (!includeInactive) q = q.eq("active", true);
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as TestimonialRow[];
 }
 
-export async function fetchSiteTexts(tenantId: string): Promise<SiteTextRow[]> {
+export async function fetchSiteTexts(): Promise<SiteTextRow[]> {
   const { data, error } = await supabase
     .from("site_texts")
     .select("*")
-    .eq("tenant_id", tenantId)
     .order("key");
   if (error) throw error;
   return (data ?? []) as SiteTextRow[];

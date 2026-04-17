@@ -15,8 +15,6 @@ import { SiteSettingsAdmin } from "@/components/admin/SiteSettingsAdmin";
 import { SiteTextsAdmin } from "@/components/admin/SiteTextsAdmin";
 import { TestimonialsAdmin } from "@/components/admin/TestimonialsAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
-import { NotificationPreferences } from "@/components/admin/NotificationPreferences";
-import { ClientsAdmin } from "@/components/admin/ClientsAdmin";
 
 type Appointment = {
   id: string;
@@ -160,7 +158,6 @@ function PainelPage() {
         <Tabs defaultValue="agenda" className="mt-6">
           <TabsList className="flex flex-wrap">
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
-            <TabsTrigger value="clients">Clientes</TabsTrigger>
             {user?.isAdmin && <TabsTrigger value="services">Serviços</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="users">Membros / Acessos</TabsTrigger>}
@@ -168,7 +165,6 @@ function PainelPage() {
             {user?.isAdmin && <TabsTrigger value="texts">Textos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
-            <TabsTrigger value="notifications">Notificações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="agenda" className="mt-6">
@@ -298,16 +294,8 @@ function PainelPage() {
             </>
           )}
 
-          <TabsContent value="clients" className="mt-6">
-            {user && <ClientsAdmin isAdmin={user.isAdmin} />}
-          </TabsContent>
-
           <TabsContent value="account" className="mt-6">
             {user && <MyAccount currentEmail={user.email} />}
-          </TabsContent>
-
-          <TabsContent value="notifications" className="mt-6">
-            {user && <NotificationPreferences userId={user.id} />}
           </TabsContent>
         </Tabs>
       </section>

@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchServices, uploadSiteImage, type ServiceRow } from "@/lib/queries";
-import { getCurrentTenantId } from "@/lib/tenant-context";
 
 export function ServicesAdmin() {
   const [items, setItems] = useState<ServiceRow[]>([]);
@@ -16,8 +15,7 @@ export function ServicesAdmin() {
   async function load() {
     setLoading(true);
     try {
-      const tenantId = await getCurrentTenantId();
-      setItems(await fetchServices(tenantId, true));
+      setItems(await fetchServices(true));
     } catch {
       toast.error("Erro ao carregar serviços.");
     } finally {
@@ -47,10 +45,9 @@ export function ServicesAdmin() {
 
   async function add() {
     const slug = `novo-${Date.now()}`;
-    const tenant_id = await getCurrentTenantId();
     const { error } = await supabase
       .from("services")
-      .insert({ tenant_id, slug, name: "Novo serviço", price: 0, duration: 30, display_order: items.length + 1 });
+      .insert({ slug, name: "Novo serviço", price: 0, duration: 30, display_order: items.length + 1 });
     if (error) { toast.error(error.message); return; }
     void load();
   }

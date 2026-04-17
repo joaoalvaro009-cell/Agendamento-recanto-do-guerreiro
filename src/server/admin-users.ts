@@ -2,29 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const DEFAULT_TENANT_SLUG = "recanto-do-guerreiro";
-let cachedTenantId: string | null = null;
-
-async function getDefaultTenantId(): Promise<string> {
-  if (cachedTenantId) return cachedTenantId;
-  const { data, error } = await supabaseAdmin
-    .from("tenants")
-    .select("id")
-    .eq("slug", DEFAULT_TENANT_SLUG)
-    .maybeSingle();
-  if (error) throw new Error(`Erro ao buscar barbearia: ${error.message}`);
-  if (!data) throw new Error(`Barbearia "${DEFAULT_TENANT_SLUG}" não encontrada.`);
-  cachedTenantId = data.id;
-  return data.id;
-}
-
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
   if (error) throw new Error(error.message);
-  const isAdmin = (data ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
+  const isAdmin = (data ?? []).some((r) => r.role === "admin");
   if (!isAdmin) throw new Error("Acesso negado: apenas administradores.");
 }
 
@@ -60,10 +44,8 @@ export const createBarberUser = createServerFn({ method: "POST" })
     const userId = created.user.id;
     const publicRole = data.role?.trim() || (data.isAdmin ? "Administrador" : "Barbeiro");
     const bio = data.bio?.trim() ?? "";
-    const tenant_id = await getDefaultTenantId();
 
     const { error: bErr } = await supabaseAdmin.from("barbers").insert({
-      tenant_id,
       user_id: userId,
       name: data.name,
       phone: data.phone.replace(/\D/g, ""),
@@ -90,7 +72,6 @@ export const createBarberUser = createServerFn({ method: "POST" })
 
     // Cria também na vitrine pública (Membros)
     const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
-      tenant_id,
       name: data.name,
       role: publicRole,
       bio,
@@ -313,9 +294,7 @@ export const updateMemberProfile = createServerFn({ method: "POST" })
         .eq("id", tm.id);
       if (tErr) throw new Error(tErr.message);
     } else {
-      const tenant_id = await getDefaultTenantId();
       await supabaseAdmin.from("team_members").insert({
-        tenant_id,
         name: data.name,
         role: data.role,
         bio: data.bio,
@@ -381,9 +360,7 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (!existingMember) {
-      const tenant_id = await getDefaultTenantId();
       const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
-        tenant_id,
         name: barber.name,
         role: data.isAdmin ? "Administrador" : "Barbeiro",
         bio: barber.bio ?? "",
