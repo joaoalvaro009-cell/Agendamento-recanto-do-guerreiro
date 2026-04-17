@@ -105,33 +105,31 @@ function AgendarPage() {
     }
 
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("appointments")
-      .insert({
-        barber_id: barber.id,
-        customer_name: name.trim(),
-        customer_phone: digits,
-        service_name: service.name,
-        service_price: service.price,
-        appointment_date: formatDateISO(date),
-        appointment_time: time,
-        reminder_1h: reminder1h,
-        reminder_10m: reminder10m,
-      })
-      .select("confirmation_code")
-      .single();
+    const confirmationCode = crypto.randomUUID();
+    const { error } = await supabase.from("appointments").insert({
+      barber_id: barber.id,
+      customer_name: name.trim(),
+      customer_phone: digits,
+      service_name: service.name,
+      service_price: service.price,
+      appointment_date: formatDateISO(date),
+      appointment_time: time,
+      reminder_1h: reminder1h,
+      reminder_10m: reminder10m,
+      confirmation_code: confirmationCode,
+    });
     setSubmitting(false);
 
-    if (error || !data) {
-      const msg = error?.message?.includes("duplicate")
+    if (error) {
+      const msg = error.message?.includes("duplicate")
         ? "Esse horário acabou de ser preenchido. Escolha outro."
-        : error?.message ?? "Não foi possível concluir o agendamento.";
+        : error.message ?? "Não foi possível concluir o agendamento.";
       toast.error(msg);
       return;
     }
 
     setConfirmed({
-      code: data.confirmation_code,
+      code: confirmationCode,
       barberPhone: barber.phone,
       barberName: barber.name,
     });
