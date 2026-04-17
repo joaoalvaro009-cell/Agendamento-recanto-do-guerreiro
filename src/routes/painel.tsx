@@ -122,7 +122,12 @@ function PainelPage() {
   }
 
   const today = formatDateISO(new Date());
+  const myBarberId = user?.barberId ?? null;
   const filtered = appointments.filter((a) => {
+    if (user?.isAdmin && myBarberId) {
+      if (scope === "mine" && a.barber_id !== myBarberId) return false;
+      if (scope === "team" && a.barber_id === myBarberId) return false;
+    }
     if (filter === "today") return a.appointment_date === today;
     if (filter === "upcoming") return a.appointment_date >= today && a.status === "confirmed";
     return true;
