@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import { uploadSiteImage } from "@/lib/queries";
 import {
   createBarberUser,
   deleteBarberUser,
   linkLoginToBarber,
-  listBarberUsers,
   setBarberActive,
   updateMemberProfile,
   updateUserEmail,
@@ -45,7 +45,6 @@ const emptyForm = {
 };
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
-  const listBarberUsersFn = useServerFn(listBarberUsers);
   const createBarberUserFn = useServerFn(createBarberUser);
   const updateUserEmailFn = useServerFn(updateUserEmail);
   const updateUserPasswordFn = useServerFn(updateUserPassword);
@@ -61,8 +60,40 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   async function load() {
     setLoading(true);
     try {
-      const res = await listBarberUsersFn();
-      setRows((res?.barbers ?? []) as Row[]);
+      const [barbersRes, teamRes] = await Promise.all([
+        supabase
+          .from("barbers")
+          .select("id, user_id, name, phone, email, is_admin, active")
+          .order("display_order")
+          .order("created_at"),
+        supabase
+          .from("team_members")
+          .select("id, name, role, bio, image_url, icon, active")
+          .order("display_order")
+          .order("created_at"),
+      ]);
+
+      if (barbersRes.error) throw barbersRes.error;
+      if (teamRes.error) throw teamRes.error;
+
+      const teamByName = new Map(
+        (teamRes.data ?? []).map((member) => [member.name.trim().toLowerCase(), member]),
+      );
+
+      const merged = (barbersRes.data ?? []).map((barber) => {
+        const member = teamByName.get(barber.name.trim().toLowerCase());
+
+        return {
+          ...barber,
+          team_member_id: member?.id ?? null,
+          public_role: member?.role ?? (barber.is_admin ? "Administrador" : "Barbeiro"),
+          public_bio: member?.bio ?? "",
+          public_image_url: member?.image_url ?? null,
+          public_icon: member?.icon ?? "star",
+        } satisfies Row;
+      });
+
+      setRows(merged);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao listar.");
       setRows([]);
