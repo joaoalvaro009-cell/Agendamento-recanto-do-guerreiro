@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { onlyDigits } from "@/lib/constants";
 import { uploadSiteImage } from "@/lib/queries";
 import {
   createBarberUser,
@@ -39,10 +40,14 @@ const emptyForm = {
   role: "Barbeiro",
   bio: "",
   imageUrl: null as string | null,
-  email: "",
   password: "",
   isAdmin: false,
+  withLogin: true,
 };
+
+function phoneToEmail(phone: string): string {
+  return `${onlyDigits(phone)}@recantodoguerreiro.local`;
+}
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const createBarberUserFn = useServerFn(createBarberUser);
@@ -118,14 +123,53 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   }
 
   async function handleCreate() {
-    if (!form.name || !form.phone || !form.email || !form.password) {
-      toast.error("Preencha nome, WhatsApp, email e senha.");
+    if (!form.name.trim() || !form.phone.trim()) {
+      toast.error("Preencha pelo menos nome e WhatsApp.");
+      return;
+    }
+    if (form.withLogin && form.password.trim().length < 8) {
+      toast.error("Senha precisa ter ao menos 8 caracteres (ou desmarque 'Criar login agora').");
       return;
     }
     setCreating(true);
     try {
-      await createBarberUserFn({ data: form });
-      toast.success("Membro criado com login.");
+      const phoneDigits = onlyDigits(form.phone);
+      if (form.withLogin) {
+        await createBarberUserFn({
+          data: {
+            name: form.name,
+            phone: form.phone,
+            role: form.role,
+            bio: form.bio,
+            imageUrl: form.imageUrl,
+            email: phoneToEmail(phoneDigits),
+            password: form.password,
+            isAdmin: form.isAdmin,
+          },
+        });
+        toast.success("Membro criado com login (WhatsApp como usuário).");
+      } else {
+        // Cria só o perfil público + barbeiro, sem login
+        const { error: bErr } = await supabase.from("barbers").insert({
+          name: form.name.trim(),
+          phone: phoneDigits,
+          email: null,
+          is_admin: false,
+          active: true,
+          bio: form.bio,
+          avatar_url: form.imageUrl,
+        });
+        if (bErr) throw bErr;
+        await supabase.from("team_members").insert({
+          name: form.name.trim(),
+          role: form.role || "Barbeiro",
+          bio: form.bio,
+          icon: "star",
+          image_url: form.imageUrl,
+          active: true,
+        });
+        toast.success("Membro criado (sem login). Crie depois em 'Criar login'.");
+      }
       setForm(emptyForm);
       setShowNew(false);
       await load();
