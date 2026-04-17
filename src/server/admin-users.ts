@@ -2,13 +2,29 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+const DEFAULT_TENANT_SLUG = "recanto-do-guerreiro";
+let cachedTenantId: string | null = null;
+
+async function getDefaultTenantId(): Promise<string> {
+  if (cachedTenantId) return cachedTenantId;
+  const { data, error } = await supabaseAdmin
+    .from("tenants")
+    .select("id")
+    .eq("slug", DEFAULT_TENANT_SLUG)
+    .maybeSingle();
+  if (error) throw new Error(`Erro ao buscar barbearia: ${error.message}`);
+  if (!data) throw new Error(`Barbearia "${DEFAULT_TENANT_SLUG}" não encontrada.`);
+  cachedTenantId = data.id;
+  return data.id;
+}
+
 async function assertAdmin(userId: string) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
   if (error) throw new Error(error.message);
-  const isAdmin = (data ?? []).some((r) => r.role === "admin");
+  const isAdmin = (data ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
   if (!isAdmin) throw new Error("Acesso negado: apenas administradores.");
 }
 
