@@ -37,9 +37,9 @@ const DEFAULT_TENANT: TenantConfig = {
   instagram_url: "https://instagram.com/recantodoguerreiro",
   logo_url: null,
   logo_size: "medium",
-  color_primary: "0 0% 8%",
-  color_accent: "42 55% 52%",
-  color_background: "0 0% 6%",
+  color_primary: "oklch(0.78 0.14 78)",
+  color_accent: "oklch(0.78 0.14 78)",
+  color_background: "oklch(0.14 0.012 60)",
   texts: {},
 };
 
