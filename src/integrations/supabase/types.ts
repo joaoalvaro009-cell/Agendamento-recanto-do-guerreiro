@@ -187,6 +187,51 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_visit_at: string | null
+          id: string
+          last_visit_at: string | null
+          name: string
+          notes: string | null
+          phone: string
+          tenant_id: string
+          total_spent: number
+          total_visits: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_visit_at?: string | null
+          id?: string
+          last_visit_at?: string | null
+          name: string
+          notes?: string | null
+          phone: string
+          tenant_id: string
+          total_spent?: number
+          total_visits?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_visit_at?: string | null
+          id?: string
+          last_visit_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string
+          tenant_id?: string
+          total_spent?: number
+          total_visits?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           channel_email: boolean
