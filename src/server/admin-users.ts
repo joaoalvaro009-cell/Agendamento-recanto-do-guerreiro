@@ -116,8 +116,17 @@ export const deleteBarberUser = createServerFn({ method: "POST" })
     if (context.userId === data.targetUserId) {
       throw new Error("Você não pode excluir a própria conta por aqui.");
     }
+    // Pega nome do barbeiro pra remover também da vitrine
+    const { data: barber } = await supabaseAdmin
+      .from("barbers")
+      .select("name")
+      .eq("id", data.barberId)
+      .maybeSingle();
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.targetUserId);
     await supabaseAdmin.from("barbers").delete().eq("id", data.barberId);
+    if (barber?.name) {
+      await supabaseAdmin.from("team_members").delete().eq("name", barber.name);
+    }
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.targetUserId);
     if (error) throw new Error(error.message);
     return { ok: true };
