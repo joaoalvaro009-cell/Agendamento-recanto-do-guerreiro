@@ -11,6 +11,7 @@ import { formatPhoneBR, onlyDigits, whatsAppLink } from "@/lib/constants";
 import { formatDateISO, formatDatePretty, getAvailableDates, getSlotsForDate } from "@/lib/booking";
 import { fetchServices, fetchTeam, type ServiceRow } from "@/lib/queries";
 import { getTenantText, useTenant } from "@/hooks/use-tenant";
+import { getCurrentTenantId } from "@/lib/tenant-context";
 
 export const Route = createFileRoute("/agendar")({
   head: () => ({
@@ -123,7 +124,9 @@ function AgendarPage() {
 
     setSubmitting(true);
     const confirmationCode = crypto.randomUUID();
+    const tenant_id = await getCurrentTenantId();
     const { error } = await supabase.from("appointments").insert({
+      tenant_id,
       barber_id: barber.id,
       customer_name: name.trim(),
       customer_phone: digits,
