@@ -2,8 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { SHOP } from "@/lib/constants";
-import { useSiteSettings } from "@/hooks/use-site-settings";
+import { useTenant } from "@/hooks/use-tenant";
 
 const NAV_LOGO_SIZE: Record<"small" | "medium" | "large", string> = {
   small: "h-8 w-auto max-w-[140px] object-contain",
@@ -21,9 +20,9 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { logo_url, logo_size } = useSiteSettings();
-  const logoSrc = logo_url || logo;
-  const hasCustomLogo = Boolean(logo_url);
+  const t = useTenant();
+  const logoSrc = t.logo_url || logo;
+  const hasCustomLogo = Boolean(t.logo_url);
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/60">
@@ -31,15 +30,15 @@ export function Navbar() {
         <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
           <img
             src={logoSrc}
-            alt={`Logo ${SHOP.name}`}
-            className={hasCustomLogo ? NAV_LOGO_SIZE[logo_size] : "h-9 w-9"}
+            alt={`Logo ${t.shop_name}`}
+            className={hasCustomLogo ? NAV_LOGO_SIZE[t.logo_size] : "h-9 w-9"}
             width={hasCustomLogo ? undefined : 36}
             height={hasCustomLogo ? undefined : 36}
           />
           {!hasCustomLogo && (
             <div className="leading-tight">
-              <div className="font-display text-base font-semibold tracking-wide">{SHOP.name}</div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{SHOP.tagline}</div>
+              <div className="font-display text-base font-semibold tracking-wide">{t.shop_name}</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t.tagline}</div>
             </div>
           )}
         </Link>
