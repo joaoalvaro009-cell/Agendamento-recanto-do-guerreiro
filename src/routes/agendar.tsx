@@ -39,6 +39,7 @@ function AgendarPage() {
   const [reminder10m, setReminder10m] = useState(true);
 
   const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   const [takenTimes, setTakenTimes] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -48,9 +49,13 @@ function AgendarPage() {
     barberName: string;
   } | null>(null);
 
-  const service = SERVICES.find((s) => s.id === serviceId);
+  const service = services.find((s) => s.id === serviceId);
   const barber = barbers.find((b) => b.id === barberId);
   const availableDates = useMemo(() => getAvailableDates(), []);
+
+  useEffect(() => {
+    fetchServices().then(setServices).catch(() => toast.error("Não foi possível carregar serviços."));
+  }, []);
 
   // Load barbers
   useEffect(() => {
@@ -228,7 +233,7 @@ function AgendarPage() {
             <div>
               <h2 className="font-display text-xl font-semibold">Escolha o serviço</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {SERVICES.map((s) => (
+                {services.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => {
@@ -248,10 +253,13 @@ function AgendarPage() {
                       </div>
                     </div>
                     <span className="font-display text-lg font-semibold text-gold">
-                      R${s.price}
+                      R${Number(s.price).toFixed(0)}
                     </span>
                   </button>
                 ))}
+                {services.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                )}
               </div>
             </div>
           )}
