@@ -60,8 +60,10 @@ export const createBarberUser = createServerFn({ method: "POST" })
     const userId = created.user.id;
     const publicRole = data.role?.trim() || (data.isAdmin ? "Administrador" : "Barbeiro");
     const bio = data.bio?.trim() ?? "";
+    const tenant_id = await getTenantIdForUser(context.userId);
 
     const { error: bErr } = await supabaseAdmin.from("barbers").insert({
+      tenant_id,
       user_id: userId,
       name: data.name,
       phone: data.phone.replace(/\D/g, ""),
@@ -88,6 +90,7 @@ export const createBarberUser = createServerFn({ method: "POST" })
 
     // Cria também na vitrine pública (Membros)
     const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
+      tenant_id,
       name: data.name,
       role: publicRole,
       bio,
@@ -310,7 +313,9 @@ export const updateMemberProfile = createServerFn({ method: "POST" })
         .eq("id", tm.id);
       if (tErr) throw new Error(tErr.message);
     } else {
+      const tenant_id = await getTenantIdForUser(context.userId);
       await supabaseAdmin.from("team_members").insert({
+        tenant_id,
         name: data.name,
         role: data.role,
         bio: data.bio,
@@ -335,7 +340,7 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
 
     const { data: barber, error: bErr } = await supabaseAdmin
       .from("barbers")
-      .select("id, user_id, name, phone, bio, avatar_url, is_admin")
+      .select("id, tenant_id, user_id, name, phone, bio, avatar_url, is_admin")
       .eq("id", data.barberId)
       .maybeSingle();
     if (bErr) throw new Error(bErr.message);
@@ -377,6 +382,7 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
 
     if (!existingMember) {
       const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
+        tenant_id: barber.tenant_id,
         name: barber.name,
         role: data.isAdmin ? "Administrador" : "Barbeiro",
         bio: barber.bio ?? "",
