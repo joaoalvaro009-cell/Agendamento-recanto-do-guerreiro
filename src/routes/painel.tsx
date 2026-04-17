@@ -33,26 +33,35 @@ export const Route = createFileRoute("/painel")({
 });
 
 type Filter = "today" | "upcoming" | "all";
+type Scope = "mine" | "team" | "all";
 
 function PainelPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filter, setFilter] = useState<Filter>("today");
-  const [user, setUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
+  const [scope, setScope] = useState<Scope>("mine");
+  const [user, setUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean; barberId: string | null } | null>(null);
+  const [barbersMap, setBarbersMap] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("appointment_date", { ascending: true })
-      .order("appointment_time", { ascending: true });
-    if (error) {
+    const [apptRes, barbersRes] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*")
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true }),
+      supabase.from("barbers").select("id, name"),
+    ]);
+    if (apptRes.error) {
       toast.error("Não foi possível carregar agendamentos.");
       setLoading(false);
       return;
     }
-    setAppointments((data ?? []) as Appointment[]);
+    const map: Record<string, string> = {};
+    for (const b of barbersRes.data ?? []) map[b.id] = b.name;
+    setBarbersMap(map);
+    setAppointments((apptRes.data ?? []) as Appointment[]);
     setLoading(false);
   }, []);
 
@@ -67,12 +76,18 @@ function PainelPage() {
       const userId = session.session.user.id;
       const email = session.session.user.email ?? "";
       const [barberRes, rolesRes] = await Promise.all([
-        supabase.from("barbers").select("name").eq("user_id", userId).maybeSingle(),
+        supabase.from("barbers").select("id, name").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       if (cancelled) return;
       const isAdmin = (rolesRes.data ?? []).some((r) => r.role === "admin");
-      setUser({ id: userId, email, name: barberRes.data?.name ?? "Barbeiro", isAdmin });
+      setUser({
+        id: userId,
+        email,
+        name: barberRes.data?.name ?? "Barbeiro",
+        isAdmin,
+        barberId: barberRes.data?.id ?? null,
+      });
       await load();
     })();
     return () => {
@@ -107,7 +122,12 @@ function PainelPage() {
   }
 
   const today = formatDateISO(new Date());
+  const myBarberId = user?.barberId ?? null;
   const filtered = appointments.filter((a) => {
+    if (user?.isAdmin && myBarberId) {
+      if (scope === "mine" && a.barber_id !== myBarberId) return false;
+      if (scope === "team" && a.barber_id === myBarberId) return false;
+    }
     if (filter === "today") return a.appointment_date === today;
     if (filter === "upcoming") return a.appointment_date >= today && a.status === "confirmed";
     return true;
@@ -144,7 +164,22 @@ function PainelPage() {
           </TabsList>
 
           <TabsContent value="agenda" className="mt-6">
-            <div className="inline-flex rounded-full border border-border/60 bg-surface/60 p-1">
+            {user?.isAdmin && myBarberId && (
+              <div className="mb-3 inline-flex rounded-full border border-gold/40 bg-surface/60 p-1">
+                {(["mine", "team", "all"] as Scope[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setScope(s)}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      scope === s ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-muted-foreground"
+                    }`}
+                  >
+                    {s === "mine" ? "Meus agendamentos" : s === "team" ? "Agendamentos da equipe" : "Todos"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="inline-flex rounded-full border border-border/60 bg-surface/60 p-1 sm:ml-2">
               {(["today", "upcoming", "all"] as Filter[]).map((f) => (
                 <button
                   key={f}
@@ -191,6 +226,9 @@ function PainelPage() {
                       <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {formatDatePretty(new Date(a.appointment_date + "T12:00:00"))}</span>
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {a.appointment_time.slice(0, 5)}</span>
                       <span>{a.service_name} · R$ {Number(a.service_price).toFixed(2).replace(".", ",")}</span>
+                      <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-semibold text-gold">
+                        Barbeiro: {barbersMap[a.barber_id] ?? "—"}
+                      </span>
                     </div>
                   </div>
 
