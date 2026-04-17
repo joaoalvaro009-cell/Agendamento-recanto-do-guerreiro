@@ -1,8 +1,28 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone, Lock } from "lucide-react";
 import { SHOP } from "@/lib/constants";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Footer() {
+  const [instagram, setInstagram] = useState({
+    handle: SHOP.instagram,
+    url: "https://instagram.com/recantodoguerreiro",
+  });
+
+  useEffect(() => {
+    void supabase
+      .from("site_settings")
+      .select("instagram_handle, instagram_url")
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setInstagram({ handle: data.instagram_handle, url: data.instagram_url });
+        }
+      });
+  }, []);
+
   return (
     <footer className="relative border-t border-border/60 bg-surface/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-4">
@@ -34,7 +54,16 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gold" /> {SHOP.address}</li>
             <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-gold" /> 75 9301-7859</li>
-            <li className="flex items-center gap-2"><Instagram className="h-4 w-4 text-gold" /> {SHOP.instagram}</li>
+            <li>
+              <a
+                href={instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 hover:text-gold"
+              >
+                <Instagram className="h-4 w-4 text-gold" /> {instagram.handle}
+              </a>
+            </li>
           </ul>
           <p className="mt-4 text-xs text-muted-foreground">
             Ter — Sáb · 08:00–19:00<br />
