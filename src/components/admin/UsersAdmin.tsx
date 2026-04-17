@@ -524,8 +524,15 @@ function MemberCard({
           {linking && !row.user_id && (
             <div className="mt-2 grid gap-2 rounded-xl border border-gold/30 bg-background/40 p-3 sm:grid-cols-2">
               <div>
-                <Label className="text-xs">Email (login)</Label>
-                <Input type="email" value={linkForm.email} onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })} placeholder={phoneToEmail(phone)} />
+                <Label className="text-xs">Telefone ou email (login)</Label>
+                <Input
+                  value={linkForm.email}
+                  onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })}
+                  placeholder={`${onlyDigits(phone) || "número do WhatsApp"} ou email`}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Pode ser só o número do WhatsApp (recomendado) ou um email.
+                </p>
               </div>
               <div>
                 <Label className="text-xs">Senha (mín 4)</Label>
