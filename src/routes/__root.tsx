@@ -33,6 +33,13 @@ export const Route = createRootRoute({
       { title: "Recanto do Guerreiro — Barbearia Premium" },
       { name: "description", content: "Barbearia premium em Serrinha — Bahia. Agende online." },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "Recanto do Guerreiro — Barbearia Premium" },
+      { name: "twitter:title", content: "Recanto do Guerreiro — Barbearia Premium" },
+      { property: "og:description", content: "Barbearia premium em Serrinha — Bahia. Agende online." },
+      { name: "twitter:description", content: "Barbearia premium em Serrinha — Bahia. Agende online." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ZEt8YkAsVsZSHmI8nbGflJqQGP82/social-images/social-1776407263100-ChatGPT_Image_17_de_abr._de_2026,_03_26_40.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ZEt8YkAsVsZSHmI8nbGflJqQGP82/social-images/social-1776407263100-ChatGPT_Image_17_de_abr._de_2026,_03_26_40.webp" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
