@@ -111,10 +111,16 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       toast.error("Senha precisa ter ao menos 4 caracteres (ou desmarque 'Criar login agora').");
       return;
     }
+    if (form.withLogin && form.loginType === "email" && !form.loginEmail.includes("@")) {
+      toast.error("Email de login inválido.");
+      return;
+    }
     setCreating(true);
     try {
       const phoneDigits = onlyDigits(form.phone);
       if (form.withLogin) {
+        const loginEmail =
+          form.loginType === "email" ? form.loginEmail.trim() : phoneToEmail(phoneDigits);
         await createBarberUserFn({
           headers: await getAuthHeaders(),
           data: {
@@ -123,12 +129,16 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
             role: form.role,
             bio: form.bio,
             imageUrl: form.imageUrl,
-            email: phoneToEmail(phoneDigits),
+            email: loginEmail,
             password: form.password,
             isAdmin: form.isAdmin,
           },
         });
-        toast.success("Membro criado com login (WhatsApp como usuário).");
+        toast.success(
+          form.loginType === "email"
+            ? "Membro criado com login por email."
+            : "Membro criado com login (WhatsApp como usuário).",
+        );
       } else {
         // Cria só o perfil público + barbeiro, sem login
         const { error: bErr } = await supabase.from("barbers").insert({
