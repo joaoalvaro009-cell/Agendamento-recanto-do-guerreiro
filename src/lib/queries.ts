@@ -34,16 +34,16 @@ export type TeamRow = {
   active: boolean;
 };
 
-export async function fetchServices(includeInactive = false): Promise<ServiceRow[]> {
-  let q = supabase.from("services").select("*").order("display_order");
+export async function fetchServices(tenantId: string, includeInactive = false): Promise<ServiceRow[]> {
+  let q = supabase.from("services").select("*").eq("tenant_id", tenantId).order("display_order");
   if (!includeInactive) q = q.eq("active", true);
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as ServiceRow[];
 }
 
-export async function fetchPlans(includeInactive = false): Promise<PlanRow[]> {
-  let q = supabase.from("plans").select("*").order("display_order");
+export async function fetchPlans(tenantId: string, includeInactive = false): Promise<PlanRow[]> {
+  let q = supabase.from("plans").select("*").eq("tenant_id", tenantId).order("display_order");
   if (!includeInactive) q = q.eq("active", true);
   const { data, error } = await q;
   if (error) throw error;
@@ -59,8 +59,8 @@ export async function fetchPlans(includeInactive = false): Promise<PlanRow[]> {
   }));
 }
 
-export async function fetchTeam(includeInactive = false): Promise<TeamRow[]> {
-  let q = supabase.from("team_members").select("*").order("display_order");
+export async function fetchTeam(tenantId: string, includeInactive = false): Promise<TeamRow[]> {
+  let q = supabase.from("team_members").select("*").eq("tenant_id", tenantId).order("display_order");
   if (!includeInactive) q = q.eq("active", true);
   const { data, error } = await q;
   if (error) throw error;
