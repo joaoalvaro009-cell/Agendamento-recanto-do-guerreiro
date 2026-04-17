@@ -239,31 +239,88 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          address: string
+          city: string
+          color_accent: string
+          color_background: string
+          color_primary: string
           created_at: string
+          hours_text: string
           id: string
           instagram_handle: string
           instagram_url: string
           logo_size: string
           logo_url: string | null
+          phone: string
+          shop_name: string
+          tagline: string
           updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          address?: string
+          city?: string
+          color_accent?: string
+          color_background?: string
+          color_primary?: string
+          created_at?: string
+          hours_text?: string
+          id?: string
+          instagram_handle?: string
+          instagram_url?: string
+          logo_size?: string
+          logo_url?: string | null
+          phone?: string
+          shop_name?: string
+          tagline?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          color_accent?: string
+          color_background?: string
+          color_primary?: string
+          created_at?: string
+          hours_text?: string
+          id?: string
+          instagram_handle?: string
+          instagram_url?: string
+          logo_size?: string
+          logo_url?: string | null
+          phone?: string
+          shop_name?: string
+          tagline?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      site_texts: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          key: string
+          updated_at: string
+          value: string
         }
         Insert: {
           created_at?: string
+          description?: string
           id?: string
-          instagram_handle?: string
-          instagram_url?: string
-          logo_size?: string
-          logo_url?: string | null
+          key: string
           updated_at?: string
+          value?: string
         }
         Update: {
           created_at?: string
+          description?: string
           id?: string
-          instagram_handle?: string
-          instagram_url?: string
-          logo_size?: string
-          logo_url?: string | null
+          key?: string
           updated_at?: string
+          value?: string
         }
         Relationships: []
       }
@@ -302,6 +359,39 @@ export type Database = {
           image_url?: string | null
           name?: string
           role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          active: boolean
+          created_at: string
+          customer_name: string
+          display_order: number
+          id: string
+          rating: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          customer_name: string
+          display_order?: number
+          id?: string
+          rating?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          customer_name?: string
+          display_order?: number
+          id?: string
+          rating?: number
+          text?: string
           updated_at?: string
         }
         Relationships: []
