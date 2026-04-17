@@ -85,6 +85,8 @@ function PlanEditor({
 }) {
   const [newItem, setNewItem] = useState("");
 
+  const benefits = Array.isArray(plan.items) ? plan.items : [];
+
   return (
     <div className="rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-card space-y-3">
       <div className="grid gap-2 sm:grid-cols-[1fr_120px_120px]">
@@ -105,10 +107,10 @@ function PlanEditor({
       <div>
         <Label className="text-xs">Benefícios</Label>
         <ul className="mt-2 space-y-1.5">
-          {plan.items.map((it, idx) => (
+          {benefits.map((it, idx) => (
             <li key={idx} className="flex items-center gap-2">
-              <Input value={it} onChange={(e) => onChange({ ...plan, items: plan.items.map((x, i) => (i === idx ? e.target.value : x)) })} />
-              <button onClick={() => onChange({ ...plan, items: plan.items.filter((_, i) => i !== idx) })} className="rounded p-1 hover:bg-destructive/15">
+              <Input value={it} onChange={(e) => onChange({ ...plan, items: benefits.map((x, i) => (i === idx ? e.target.value : x)) })} />
+              <button type="button" onClick={() => onChange({ ...plan, items: benefits.filter((_, i) => i !== idx) })} className="rounded p-1 hover:bg-destructive/15">
                 <X className="h-4 w-4" />
               </button>
             </li>
@@ -119,9 +121,10 @@ function PlanEditor({
           <Button
             size="sm"
             variant="outline"
+            type="button"
             onClick={() => {
               if (!newItem.trim()) return;
-              onChange({ ...plan, items: [...plan.items, newItem.trim()] });
+              onChange({ ...plan, items: [...benefits, newItem.trim()] });
               setNewItem("");
             }}
           >
@@ -142,7 +145,7 @@ function PlanEditor({
       </div>
 
       <div className="flex gap-2">
-        <Button size="sm" onClick={() => void onSave(plan)}>Salvar</Button>
+        <Button size="sm" onClick={() => void onSave({ ...plan, items: benefits })}>Salvar</Button>
         <Button size="sm" variant="destructive" onClick={() => void onRemove(plan.id)}>
           <Trash2 className="h-3 w-3" /> Excluir
         </Button>
