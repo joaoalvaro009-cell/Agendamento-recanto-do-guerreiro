@@ -1,41 +1,50 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Tenant ativo (slug). Por enquanto fixo na Recanto do Guerreiro,
- * já que as URLs públicas continuam em /, /agendar, /painel.
- * Quando movermos para /b/$slug, esta função passa a ler do path.
+ * Tenant padrão. Usado quando o contexto ainda não tem slug (ex.: telas admin
+ * legadas, ou rotas antigas redirecionando).
  */
 export const DEFAULT_TENANT_SLUG = "recanto-do-guerreiro";
 
-let cachedTenantId: string | null = null;
-let inflightId: Promise<string> | null = null;
+const cache = new Map<string, string>();
+const inflight = new Map<string, Promise<string>>();
 
 /**
- * Resolve o tenant_id do tenant atual. Cacheado em memória.
- * Lança erro se a barbearia não estiver cadastrada/ativa.
+ * Resolve o tenant_id de um slug. Cacheado por slug.
+ * Se nenhum slug for passado, usa o tenant padrão (compat).
  */
-export async function getCurrentTenantId(): Promise<string> {
-  if (cachedTenantId) return cachedTenantId;
-  if (inflightId) return inflightId;
+export async function getCurrentTenantId(slug: string = DEFAULT_TENANT_SLUG): Promise<string> {
+  const cached = cache.get(slug);
+  if (cached) return cached;
 
-  inflightId = (async () => {
+  const pending = inflight.get(slug);
+  if (pending) return pending;
+
+  const promise = (async () => {
     const { data, error } = await supabase
       .from("tenants")
       .select("id")
-      .eq("slug", DEFAULT_TENANT_SLUG)
+      .eq("slug", slug)
       .eq("active", true)
       .maybeSingle();
 
     if (error) throw new Error(`Erro ao buscar barbearia: ${error.message}`);
-    if (!data) throw new Error(`Barbearia "${DEFAULT_TENANT_SLUG}" não encontrada ou inativa.`);
+    if (!data) throw new Error(`Barbearia "${slug}" não encontrada ou inativa.`);
 
-    cachedTenantId = data.id;
+    cache.set(slug, data.id);
     return data.id;
   })();
 
+  inflight.set(slug, promise);
   try {
-    return await inflightId;
+    return await promise;
   } finally {
-    inflightId = null;
+    inflight.delete(slug);
   }
+}
+
+/** Limpa o cache de um slug (útil ao mudar de tenant). */
+export function clearTenantCache(slug?: string) {
+  if (slug) cache.delete(slug);
+  else cache.clear();
 }
