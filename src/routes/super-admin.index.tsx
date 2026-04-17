@@ -224,6 +224,8 @@ function SuperAdminPage() {
       setResetting(false);
     }
   }
+
+  if (!authChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-gold" />
@@ -354,22 +356,43 @@ function SuperAdminPage() {
           )}
           {tenants.map((t) => {
             const s = stats[t.id];
+            const publicUrl = `/b/${t.slug}`;
             return (
               <div
                 key={t.id}
                 className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-card sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{t.name}</p>
                     <Badge variant={t.active ? "default" : "outline"} className={t.active ? "bg-gold/15 text-gold border-gold/40" : ""}>
                       {t.active ? "Ativa" : "Inativa"}
                     </Badge>
                     <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{t.plan}</Badge>
+                    {!t.owner_user_id && (
+                      <Badge variant="outline" className="border-destructive/50 text-destructive text-[10px]">
+                        Sem dono
+                      </Badge>
+                    )}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    /b/{t.slug} · {s ? `${s.barbers} barbeiros · ${s.appointments} agendamentos` : "..."}
-                  </p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <a
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-gold hover:underline"
+                    >
+                      {publicUrl} <ExternalLink className="h-3 w-3" />
+                    </a>
+                    {t.owner_email ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> {t.owner_email}
+                      </span>
+                    ) : (
+                      <span className="italic">sem email do dono</span>
+                    )}
+                    <span>{s ? `${s.barbers} barbeiros · ${s.appointments} agendamentos` : "..."}</span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <select
@@ -383,6 +406,15 @@ function SuperAdminPage() {
                   </select>
                   <Button
                     size="sm"
+                    variant="outline"
+                    disabled={!t.owner_user_id}
+                    onClick={() => openReset(t)}
+                    title={t.owner_user_id ? "Definir nova senha do dono" : "Sem dono cadastrado"}
+                  >
+                    <KeyRound className="h-3 w-3" /> Redefinir senha
+                  </Button>
+                  <Button
+                    size="sm"
                     variant={t.active ? "destructive" : "default"}
                     onClick={() => void toggleActive(t)}
                   >
@@ -393,6 +425,45 @@ function SuperAdminPage() {
               </div>
             );
           })}
+        </div>
+      </main>
+
+      <Dialog open={!!resetTarget} onOpenChange={(o) => !o && setResetTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir senha do dono</DialogTitle>
+            <DialogDescription>
+              {resetTarget?.owner_email ? (
+                <>Nova senha para <span className="font-mono text-foreground">{resetTarget.owner_email}</span> ({resetTarget?.name}).</>
+              ) : (
+                <>Nova senha para o dono de {resetTarget?.name}.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reset-pass">Nova senha temporária</Label>
+            <Input
+              id="reset-pass"
+              type="text"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              placeholder="mín. 6 caracteres"
+            />
+            <p className="text-xs text-muted-foreground">
+              Copie e envie ao dono. Ele poderá entrar em <span className="font-mono">/login</span> e trocar depois.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setResetTarget(null)}>Cancelar</Button>
+            <Button onClick={() => void confirmReset()} disabled={resetting}>
+              {resetting && <Loader2 className="h-4 w-4 animate-spin" />} Redefinir senha
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
         </div>
       </main>
     </div>
