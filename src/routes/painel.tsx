@@ -39,20 +39,27 @@ function PainelPage() {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filter, setFilter] = useState<Filter>("today");
-  const [user, setUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean; barberId: string | null } | null>(null);
+  const [barbersMap, setBarbersMap] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("appointment_date", { ascending: true })
-      .order("appointment_time", { ascending: true });
-    if (error) {
+    const [apptRes, barbersRes] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*")
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true }),
+      supabase.from("barbers").select("id, name"),
+    ]);
+    if (apptRes.error) {
       toast.error("Não foi possível carregar agendamentos.");
       setLoading(false);
       return;
     }
-    setAppointments((data ?? []) as Appointment[]);
+    const map: Record<string, string> = {};
+    for (const b of barbersRes.data ?? []) map[b.id] = b.name;
+    setBarbersMap(map);
+    setAppointments((apptRes.data ?? []) as Appointment[]);
     setLoading(false);
   }, []);
 
@@ -67,12 +74,18 @@ function PainelPage() {
       const userId = session.session.user.id;
       const email = session.session.user.email ?? "";
       const [barberRes, rolesRes] = await Promise.all([
-        supabase.from("barbers").select("name").eq("user_id", userId).maybeSingle(),
+        supabase.from("barbers").select("id, name").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       if (cancelled) return;
       const isAdmin = (rolesRes.data ?? []).some((r) => r.role === "admin");
-      setUser({ id: userId, email, name: barberRes.data?.name ?? "Barbeiro", isAdmin });
+      setUser({
+        id: userId,
+        email,
+        name: barberRes.data?.name ?? "Barbeiro",
+        isAdmin,
+        barberId: barberRes.data?.id ?? null,
+      });
       await load();
     })();
     return () => {
