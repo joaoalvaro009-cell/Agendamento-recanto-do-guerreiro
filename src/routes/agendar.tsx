@@ -120,7 +120,18 @@ function AgendarPage() {
 
     setSubmitting(true);
     const confirmationCode = crypto.randomUUID();
+    const { data: barberRow, error: bErr } = await supabase
+      .from("barbers")
+      .select("tenant_id")
+      .eq("id", barber.id)
+      .maybeSingle();
+    if (bErr || !barberRow) {
+      setSubmitting(false);
+      toast.error("Barbeiro não encontrado.");
+      return;
+    }
     const { error } = await supabase.from("appointments").insert({
+      tenant_id: barberRow.tenant_id,
       barber_id: barber.id,
       customer_name: name.trim(),
       customer_phone: digits,

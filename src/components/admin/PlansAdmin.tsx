@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPlans, type PlanRow } from "@/lib/queries";
+import { fetchPlans, getCurrentTenantId, type PlanRow } from "@/lib/queries";
 
 export function PlansAdmin() {
   const [items, setItems] = useState<PlanRow[]>([]);
@@ -42,9 +42,10 @@ export function PlansAdmin() {
   }
 
   async function add() {
+    const tenant_id = await getCurrentTenantId();
     const { error } = await supabase
       .from("plans")
-      .insert({ slug: `novo-${Date.now()}`, name: "Novo plano", price: 0, items: [], display_order: items.length + 1 });
+      .insert({ tenant_id, slug: `novo-${Date.now()}`, name: "Novo plano", price: 0, items: [], display_order: items.length + 1 });
     if (error) { toast.error(error.message); return; }
     void load();
   }
