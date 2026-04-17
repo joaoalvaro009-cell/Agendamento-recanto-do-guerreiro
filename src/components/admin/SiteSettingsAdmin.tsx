@@ -12,6 +12,7 @@ type Settings = {
   instagram_handle: string;
   instagram_url: string;
   logo_url: string | null;
+  logo_size: "small" | "medium" | "large";
 };
 
 export function SiteSettingsAdmin() {
@@ -24,13 +25,19 @@ export function SiteSettingsAdmin() {
     setLoading(true);
     const { data, error } = await supabase
       .from("site_settings")
-      .select("id, instagram_handle, instagram_url, logo_url")
+      .select("id, instagram_handle, instagram_url, logo_url, logo_size")
       .limit(1)
       .maybeSingle();
     if (error) {
       toast.error("Erro ao carregar configurações.");
     } else if (data) {
-      setSettings(data);
+      setSettings({
+        id: data.id,
+        instagram_handle: data.instagram_handle,
+        instagram_url: data.instagram_url,
+        logo_url: data.logo_url,
+        logo_size: ((data as { logo_size?: string }).logo_size as Settings["logo_size"]) ?? "medium",
+      });
     }
     setLoading(false);
   }
@@ -62,6 +69,7 @@ export function SiteSettingsAdmin() {
         instagram_handle: settings.instagram_handle,
         instagram_url: settings.instagram_url,
         logo_url: settings.logo_url,
+        logo_size: settings.logo_size,
       })
       .eq("id", settings.id);
     setSaving(false);

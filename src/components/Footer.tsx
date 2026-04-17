@@ -3,8 +3,14 @@ import { Instagram, MapPin, Phone, Lock } from "lucide-react";
 import { SHOP } from "@/lib/constants";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
+const FOOTER_LOGO_SIZE: Record<"small" | "medium" | "large", string> = {
+  small: "h-10 w-auto max-w-[160px] object-contain",
+  medium: "h-14 w-auto max-w-[220px] object-contain",
+  large: "h-20 w-auto max-w-[300px] object-contain",
+};
+
 export function Footer() {
-  const { instagram_handle, instagram_url, logo_url } = useSiteSettings();
+  const { instagram_handle, instagram_url, logo_url, logo_size } = useSiteSettings();
 
   return (
     <footer className="relative border-t border-border/60 bg-surface/40">
@@ -14,7 +20,7 @@ export function Footer() {
             <img
               src={logo_url}
               alt={`Logo ${SHOP.name}`}
-              className="h-14 w-auto max-w-[220px] object-contain"
+              className={FOOTER_LOGO_SIZE[logo_size]}
             />
           ) : (
             <>
