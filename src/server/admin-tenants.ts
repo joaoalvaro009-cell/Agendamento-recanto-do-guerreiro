@@ -32,6 +32,75 @@ function slugify(value: string) {
  * - Define owner_user_id no tenant
  * - Clona conteúdo padrão (services, plans, site_texts, team_members, site_settings) da Recanto
  */
+/**
+ * Lista tenants com o email do dono. Apenas super admin.
+ */
+export const listTenantsWithOwners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.userId);
+
+    const { data: tenants, error } = await supabaseAdmin
+      .from("tenants")
+      .select("id, slug, name, plan, active, created_at, owner_user_id")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const ownerIds = Array.from(
+      new Set((tenants ?? []).map((t) => t.owner_user_id).filter((v): v is string => Boolean(v))),
+    );
+
+    const emailById = new Map<string, string>();
+    if (ownerIds.length) {
+      // listUsers retorna paginado; para poucas barbearias, 1 página basta.
+      const { data: list, error: lErr } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      if (lErr) throw new Error(lErr.message);
+      for (const u of list?.users ?? []) {
+        if (u.email) emailById.set(u.id, u.email);
+      }
+    }
+
+    return (tenants ?? []).map((t) => ({
+      ...t,
+      owner_email: t.owner_user_id ? emailById.get(t.owner_user_id) ?? null : null,
+    }));
+  });
+
+/**
+ * Define uma nova senha para o dono de uma barbearia. Apenas super admin.
+ * Útil quando o dono perdeu o acesso e o super admin precisa enviar uma senha temporária.
+ */
+export const resetTenantOwnerPassword = createServerFn({ method: "POST" })
+  .inputValidator((d: { tenantId: string; newPassword: string }) => {
+    if (!d.tenantId) throw new Error("Tenant inválido.");
+    if (d.newPassword.length < 6) throw new Error("Senha precisa de ao menos 6 caracteres.");
+    return d;
+  })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.userId);
+
+    const { data: tenant, error: tErr } = await supabaseAdmin
+      .from("tenants")
+      .select("id, owner_user_id")
+      .eq("id", data.tenantId)
+      .maybeSingle();
+    if (tErr) throw new Error(tErr.message);
+    if (!tenant) throw new Error("Barbearia não encontrada.");
+    if (!tenant.owner_user_id) throw new Error("Esta barbearia não tem dono cadastrado.");
+
+    const { data: updated, error: uErr } = await supabaseAdmin.auth.admin.updateUserById(
+      tenant.owner_user_id,
+      { password: data.newPassword },
+    );
+    if (uErr) throw new Error(uErr.message);
+
+    return { ok: true, email: updated.user?.email ?? null };
+  });
+
 export const createTenantWithOwner = createServerFn({ method: "POST" })
   .inputValidator((d: {
     name: string;
