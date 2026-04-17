@@ -59,51 +59,50 @@ function SuperAdminPage() {
   const [plan, setPlan] = useState("starter");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [resetTarget, setResetTarget] = useState<Tenant | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("id, slug, name, plan, active, created_at")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Erro ao carregar barbearias.");
-      setLoading(false);
-      return;
-    }
-    setTenants(data as Tenant[]);
+    try {
+      const data = await listTenantsWithOwners();
+      setTenants(data as Tenant[]);
 
-    // Estatísticas (contagem) por tenant — feita em paralelo
-    const ids = (data ?? []).map((t) => t.id);
-    if (ids.length) {
-      const [apptCounts, barbCounts] = await Promise.all([
-        Promise.all(
-          ids.map((id) =>
-            supabase
-              .from("appointments")
-              .select("id", { count: "exact", head: true })
-              .eq("tenant_id", id),
+      const ids = data.map((t) => t.id);
+      if (ids.length) {
+        const [apptCounts, barbCounts] = await Promise.all([
+          Promise.all(
+            ids.map((id) =>
+              supabase
+                .from("appointments")
+                .select("id", { count: "exact", head: true })
+                .eq("tenant_id", id),
+            ),
           ),
-        ),
-        Promise.all(
-          ids.map((id) =>
-            supabase
-              .from("barbers")
-              .select("id", { count: "exact", head: true })
-              .eq("tenant_id", id),
+          Promise.all(
+            ids.map((id) =>
+              supabase
+                .from("barbers")
+                .select("id", { count: "exact", head: true })
+                .eq("tenant_id", id),
+            ),
           ),
-        ),
-      ]);
-      const next: Record<string, Stats> = {};
-      ids.forEach((id, i) => {
-        next[id] = {
-          appointments: apptCounts[i].count ?? 0,
-          barbers: barbCounts[i].count ?? 0,
-        };
-      });
-      setStats(next);
+        ]);
+        const next: Record<string, Stats> = {};
+        ids.forEach((id, i) => {
+          next[id] = {
+            appointments: apptCounts[i].count ?? 0,
+            barbers: barbCounts[i].count ?? 0,
+          };
+        });
+        setStats(next);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar barbearias.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
