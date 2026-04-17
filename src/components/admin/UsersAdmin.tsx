@@ -367,7 +367,7 @@ function MemberCard({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [linking, setLinking] = useState(false);
-  const [linkForm, setLinkForm] = useState({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
+  const [linkForm, setLinkForm] = useState({ email: row.email ?? onlyDigits(row.phone), password: "", isAdmin: row.is_admin });
 
   // Só recarrega o form quando muda de barbeiro (id diferente).
   // Não pode depender do objeto `row` inteiro, senão sobrescreve o que o usuário digita
