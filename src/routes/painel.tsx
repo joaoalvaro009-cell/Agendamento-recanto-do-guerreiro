@@ -33,12 +33,14 @@ export const Route = createFileRoute("/painel")({
 });
 
 type Filter = "today" | "upcoming" | "all";
+type Scope = "mine" | "team" | "all";
 
 function PainelPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filter, setFilter] = useState<Filter>("today");
+  const [scope, setScope] = useState<Scope>("mine");
   const [user, setUser] = useState<{ id: string; email: string; name: string; isAdmin: boolean; barberId: string | null } | null>(null);
   const [barbersMap, setBarbersMap] = useState<Record<string, string>>({});
 
