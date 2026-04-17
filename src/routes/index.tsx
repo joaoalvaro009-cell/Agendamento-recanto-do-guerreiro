@@ -41,8 +41,12 @@ const testimonials = [
 
 function Home() {
   const [team, setTeam] = useState<TeamRow[]>([]);
+  const [plans, setPlans] = useState<PlanRow[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   useEffect(() => {
     fetchTeam().then(setTeam).catch(() => {});
+    fetchPlans().then(setPlans).catch(() => {});
+    fetchServices().then(setServices).catch(() => {});
   }, []);
 
   return (
