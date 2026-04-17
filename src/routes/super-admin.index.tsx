@@ -195,7 +195,35 @@ function SuperAdminPage() {
     }
   }
 
-  if (!authChecked) {
+  function openReset(t: Tenant) {
+    if (!t.owner_user_id) {
+      toast.error("Esta barbearia não tem dono cadastrado.");
+      return;
+    }
+    setResetTarget(t);
+    setResetPassword(Math.random().toString(36).slice(-10));
+  }
+
+  async function confirmReset() {
+    if (!resetTarget) return;
+    if (resetPassword.length < 6) {
+      toast.error("A nova senha precisa ter ao menos 6 caracteres.");
+      return;
+    }
+    setResetting(true);
+    try {
+      const res = await resetTenantOwnerPassword({
+        data: { tenantId: resetTarget.id, newPassword: resetPassword },
+      });
+      toast.success(`Senha redefinida para ${res.email ?? "o dono"}.`);
+      setResetTarget(null);
+      setResetPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao redefinir senha.");
+    } finally {
+      setResetting(false);
+    }
+  }
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-gold" />
