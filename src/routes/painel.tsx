@@ -139,6 +139,7 @@ function PainelPage() {
             {user?.isAdmin && <TabsTrigger value="services">Serviços</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="users">Membros / Acessos</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="site">Site</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
           </TabsList>
 
@@ -229,6 +230,12 @@ function PainelPage() {
                   <p><span className="font-semibold text-foreground">Membros / Acessos</span> — cadastre cada membro da equipe com <strong>foto, cargo, bio, WhatsApp, email e senha</strong> de uma só vez. Eles aparecem na vitrine pública e entram no painel para receber agendamentos.</p>
                 </div>
                 <UsersAdmin currentUserId={user.id} />
+              </TabsContent>
+              <TabsContent value="site" className="mt-6">
+                <div className="mb-4 rounded-xl border border-gold/30 bg-surface/40 p-4 text-sm text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Site</span> — configurações públicas do site, como o link e @arroba do Instagram que aparece no rodapé.</p>
+                </div>
+                <SiteSettingsAdmin />
               </TabsContent>
             </>
           )}
