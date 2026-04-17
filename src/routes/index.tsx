@@ -1,11 +1,19 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Calendar, Check, ChevronRight, Clock, MapPin, Scissors, Sparkles, Star } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PLANS, SERVICES, SHOP } from "@/lib/constants";
+import { fetchTeam, type TeamRow } from "@/lib/queries";
 import hero from "@/assets/hero-barbershop.jpg";
-import bruno from "@/assets/barber-bruno.jpg";
-import pedrinho from "@/assets/barber-pedrinho.jpg";
+import brunoFallback from "@/assets/barber-bruno.jpg";
+import pedrinhoFallback from "@/assets/barber-pedrinho.jpg";
 import tools from "@/assets/tools.jpg";
+
+function fallbackImage(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("pedrinho")) return pedrinhoFallback;
+  return brunoFallback;
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,6 +40,11 @@ const testimonials = [
 ];
 
 function Home() {
+  const [team, setTeam] = useState<TeamRow[]>([]);
+  useEffect(() => {
+    fetchTeam().then(setTeam).catch(() => {});
+  }, []);
+
   return (
     <SiteLayout>
       {/* HERO */}
@@ -116,21 +129,21 @@ function Home() {
           </div>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-8 sm:grid-cols-2">
-            {[
-              { name: "Bruno", role: "Dono & Master Barber", img: bruno },
-              { name: "Pedrinho", role: "Barbeiro Sênior", img: pedrinho },
-            ].map((m) => (
-              <div key={m.name} className="group overflow-hidden rounded-2xl border border-border/60 bg-surface/60 shadow-card transition hover:shadow-gold">
-                <div className="relative aspect-[4/5] overflow-hidden">
-                  <img src={m.img} alt={`Barbeiro ${m.name}`} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5">
-                    <h3 className="font-display text-2xl font-semibold">{m.name}</h3>
-                    <p className="text-xs uppercase tracking-[0.18em] text-gold">{m.role}</p>
+            {team.map((m) => {
+              const img = m.image_url ?? fallbackImage(m.name);
+              return (
+                <div key={m.id} className="group overflow-hidden rounded-2xl border border-border/60 bg-surface/60 shadow-card transition hover:shadow-gold">
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <img src={img} alt={`Barbeiro ${m.name}`} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5">
+                      <h3 className="font-display text-2xl font-semibold">{m.name}</h3>
+                      <p className="text-xs uppercase tracking-[0.18em] text-gold">{m.role}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
