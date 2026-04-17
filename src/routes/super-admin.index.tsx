@@ -279,9 +279,34 @@ function SuperAdminPage() {
                 </select>
               </div>
             </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="t-owner-email">Email do dono</Label>
+                <Input
+                  id="t-owner-email"
+                  type="email"
+                  value={ownerEmail}
+                  onChange={(e) => setOwnerEmail(e.target.value)}
+                  placeholder="dono@barbearia.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="t-owner-pass">Senha temporária</Label>
+                <Input
+                  id="t-owner-pass"
+                  type="text"
+                  value={ownerPassword}
+                  onChange={(e) => setOwnerPassword(e.target.value)}
+                  placeholder="mín. 6 caracteres"
+                />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              O dono recebe acesso de admin. Conteúdo padrão (serviços, planos, equipe, textos) é copiado da Recanto do Guerreiro.
+            </p>
             <div className="mt-4 flex gap-2">
               <Button type="submit" disabled={creating}>
-                {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar
+                {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar barbearia
               </Button>
               <Button type="button" variant="ghost" onClick={() => setShowNew(false)}>
                 Cancelar
