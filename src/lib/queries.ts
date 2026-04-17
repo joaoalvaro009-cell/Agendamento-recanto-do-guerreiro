@@ -47,7 +47,16 @@ export async function fetchPlans(includeInactive = false): Promise<PlanRow[]> {
   if (!includeInactive) q = q.eq("active", true);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []) as PlanRow[];
+  return ((data ?? []) as Partial<PlanRow>[]).map((plan) => ({
+    id: plan.id ?? "",
+    slug: plan.slug ?? "",
+    name: plan.name ?? "",
+    price: Number(plan.price ?? 0),
+    items: Array.isArray(plan.items) ? plan.items.filter((item): item is string => typeof item === "string") : [],
+    featured: Boolean(plan.featured),
+    display_order: Number(plan.display_order ?? 0),
+    active: plan.active ?? true,
+  }));
 }
 
 export async function fetchTeam(includeInactive = false): Promise<TeamRow[]> {
