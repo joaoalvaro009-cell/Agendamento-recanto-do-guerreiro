@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Building2, ExternalLink, KeyRound, Loader2, LogOut, Mail, Plus, Power, RefreshCw } from "lucide-react";
+import { Building2, ExternalLink, KeyRound, Loader2, LogOut, Mail, Plus, Power, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { createTenantWithOwner, listTenantsWithOwners, resetTenantOwnerPassword } from "@/server/admin-tenants";
+import { createTenantWithOwner, deleteTenant, listTenantsWithOwners, resetTenantOwnerPassword } from "@/server/admin-tenants";
 
 export const Route = createFileRoute("/super-admin/")({
   head: () => ({
