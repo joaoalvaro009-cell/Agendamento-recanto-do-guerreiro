@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Loader2, LogOut, Plus, Power, RefreshCw } from "lucide-react";
+import { Building2, ExternalLink, KeyRound, Loader2, LogOut, Mail, Plus, Power, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { createTenantWithOwner } from "@/server/admin-tenants";
+import { createTenantWithOwner, listTenantsWithOwners, resetTenantOwnerPassword } from "@/server/admin-tenants";
 
 export const Route = createFileRoute("/super-admin/")({
   head: () => ({
@@ -26,6 +27,8 @@ type Tenant = {
   plan: string;
   active: boolean;
   created_at: string;
+  owner_user_id: string | null;
+  owner_email: string | null;
 };
 
 type Stats = {
@@ -56,51 +59,50 @@ function SuperAdminPage() {
   const [plan, setPlan] = useState("starter");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [resetTarget, setResetTarget] = useState<Tenant | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("id, slug, name, plan, active, created_at")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Erro ao carregar barbearias.");
-      setLoading(false);
-      return;
-    }
-    setTenants(data as Tenant[]);
+    try {
+      const data = await listTenantsWithOwners();
+      setTenants(data as Tenant[]);
 
-    // Estatísticas (contagem) por tenant — feita em paralelo
-    const ids = (data ?? []).map((t) => t.id);
-    if (ids.length) {
-      const [apptCounts, barbCounts] = await Promise.all([
-        Promise.all(
-          ids.map((id) =>
-            supabase
-              .from("appointments")
-              .select("id", { count: "exact", head: true })
-              .eq("tenant_id", id),
+      const ids = data.map((t) => t.id);
+      if (ids.length) {
+        const [apptCounts, barbCounts] = await Promise.all([
+          Promise.all(
+            ids.map((id) =>
+              supabase
+                .from("appointments")
+                .select("id", { count: "exact", head: true })
+                .eq("tenant_id", id),
+            ),
           ),
-        ),
-        Promise.all(
-          ids.map((id) =>
-            supabase
-              .from("barbers")
-              .select("id", { count: "exact", head: true })
-              .eq("tenant_id", id),
+          Promise.all(
+            ids.map((id) =>
+              supabase
+                .from("barbers")
+                .select("id", { count: "exact", head: true })
+                .eq("tenant_id", id),
+            ),
           ),
-        ),
-      ]);
-      const next: Record<string, Stats> = {};
-      ids.forEach((id, i) => {
-        next[id] = {
-          appointments: apptCounts[i].count ?? 0,
-          barbers: barbCounts[i].count ?? 0,
-        };
-      });
-      setStats(next);
+        ]);
+        const next: Record<string, Stats> = {};
+        ids.forEach((id, i) => {
+          next[id] = {
+            appointments: apptCounts[i].count ?? 0,
+            barbers: barbCounts[i].count ?? 0,
+          };
+        });
+        setStats(next);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao carregar barbearias.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -190,6 +192,36 @@ function SuperAdminPage() {
       toast.error(err instanceof Error ? err.message : "Erro ao criar barbearia.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  function openReset(t: Tenant) {
+    if (!t.owner_user_id) {
+      toast.error("Esta barbearia não tem dono cadastrado.");
+      return;
+    }
+    setResetTarget(t);
+    setResetPassword(Math.random().toString(36).slice(-10));
+  }
+
+  async function confirmReset() {
+    if (!resetTarget) return;
+    if (resetPassword.length < 6) {
+      toast.error("A nova senha precisa ter ao menos 6 caracteres.");
+      return;
+    }
+    setResetting(true);
+    try {
+      const res = await resetTenantOwnerPassword({
+        data: { tenantId: resetTarget.id, newPassword: resetPassword },
+      });
+      toast.success(`Senha redefinida para ${res.email ?? "o dono"}.`);
+      setResetTarget(null);
+      setResetPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao redefinir senha.");
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -324,22 +356,43 @@ function SuperAdminPage() {
           )}
           {tenants.map((t) => {
             const s = stats[t.id];
+            const publicUrl = `/b/${t.slug}`;
             return (
               <div
                 key={t.id}
                 className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-surface/60 p-5 shadow-card sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{t.name}</p>
                     <Badge variant={t.active ? "default" : "outline"} className={t.active ? "bg-gold/15 text-gold border-gold/40" : ""}>
                       {t.active ? "Ativa" : "Inativa"}
                     </Badge>
                     <Badge variant="outline" className="text-[10px] uppercase tracking-wider">{t.plan}</Badge>
+                    {!t.owner_user_id && (
+                      <Badge variant="outline" className="border-destructive/50 text-destructive text-[10px]">
+                        Sem dono
+                      </Badge>
+                    )}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    /b/{t.slug} · {s ? `${s.barbers} barbeiros · ${s.appointments} agendamentos` : "..."}
-                  </p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <a
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-gold hover:underline"
+                    >
+                      {publicUrl} <ExternalLink className="h-3 w-3" />
+                    </a>
+                    {t.owner_email ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> {t.owner_email}
+                      </span>
+                    ) : (
+                      <span className="italic">sem email do dono</span>
+                    )}
+                    <span>{s ? `${s.barbers} barbeiros · ${s.appointments} agendamentos` : "..."}</span>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <select
@@ -351,6 +404,15 @@ function SuperAdminPage() {
                     <option value="pro">Pro</option>
                     <option value="enterprise">Enterprise</option>
                   </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!t.owner_user_id}
+                    onClick={() => openReset(t)}
+                    title={t.owner_user_id ? "Definir nova senha do dono" : "Sem dono cadastrado"}
+                  >
+                    <KeyRound className="h-3 w-3" /> Redefinir senha
+                  </Button>
                   <Button
                     size="sm"
                     variant={t.active ? "destructive" : "default"}
@@ -365,6 +427,41 @@ function SuperAdminPage() {
           })}
         </div>
       </main>
+
+      <Dialog open={!!resetTarget} onOpenChange={(o) => !o && setResetTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir senha do dono</DialogTitle>
+            <DialogDescription>
+              {resetTarget?.owner_email ? (
+                <>Nova senha para <span className="font-mono text-foreground">{resetTarget.owner_email}</span> ({resetTarget?.name}).</>
+              ) : (
+                <>Nova senha para o dono de {resetTarget?.name}.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reset-pass">Nova senha temporária</Label>
+            <Input
+              id="reset-pass"
+              type="text"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              placeholder="mín. 6 caracteres"
+            />
+            <p className="text-xs text-muted-foreground">
+              Copie e envie ao dono. Ele poderá entrar em <span className="font-mono">/login</span> e trocar depois.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setResetTarget(null)}>Cancelar</Button>
+            <Button onClick={() => void confirmReset()} disabled={resetting}>
+              {resetting && <Loader2 className="h-4 w-4 animate-spin" />} Redefinir senha
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
