@@ -281,25 +281,46 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <Label className="text-xs">WhatsApp (só números)</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
-                <div>
-                  <Label className="text-xs">Email (login)</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label className="text-xs">Senha inicial (mín 8)</Label>
-                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                </div>
+                {form.withLogin && (
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Senha inicial (mín 8 caracteres)</Label>
+                    <Input
+                      type="password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      placeholder="O usuário entra com o WhatsApp + esta senha"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      O login será feito com <strong>WhatsApp</strong> (mesmo da vitrine) e esta senha.
+                    </p>
+                  </div>
+                )}
                 <div className="sm:col-span-2">
                   <Label className="text-xs">Bio (vitrine pública)</Label>
                   <Textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.isAdmin} onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })} />
-                É administrador
-              </label>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.withLogin}
+                    onChange={(e) => setForm({ ...form, withLogin: e.target.checked })}
+                  />
+                  Criar login agora
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isAdmin}
+                    onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })}
+                    disabled={!form.withLogin}
+                  />
+                  É administrador
+                </label>
+              </div>
               <Button size="sm" onClick={() => void handleCreate()} disabled={creating}>
-                <Plus className="h-4 w-4" /> {creating ? "Criando..." : "Criar membro + login"}
+                <Plus className="h-4 w-4" /> {creating ? "Criando..." : form.withLogin ? "Criar membro + login" : "Criar membro"}
               </Button>
             </div>
           </div>
