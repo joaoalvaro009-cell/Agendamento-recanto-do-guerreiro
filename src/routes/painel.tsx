@@ -138,8 +138,8 @@ function PainelPage() {
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
             {user?.isAdmin && <TabsTrigger value="services">Serviços</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
-            {user?.isAdmin && <TabsTrigger value="team">Equipe</TabsTrigger>}
-            {user?.isAdmin && <TabsTrigger value="users">Usuários</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="team">Vitrine do site</TabsTrigger>}
+            {user?.isAdmin && <TabsTrigger value="users">Logins / Acessos</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
           </TabsList>
 
