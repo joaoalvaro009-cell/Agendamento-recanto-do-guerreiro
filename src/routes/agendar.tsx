@@ -29,6 +29,8 @@ type Barber = { id: string; name: string; phone: string; image_url?: string | nu
 const STEPS = ["Serviço", "Barbeiro", "Data", "Horário", "Confirmar"] as const;
 
 function AgendarPage() {
+  const tenant = useTenant();
+  const toleranceNotice = getTenantText(tenant, "tolerance_notice", "");
   const [step, setStep] = useState(0);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [barberId, setBarberId] = useState<string | null>(null);
@@ -190,7 +192,7 @@ function AgendarPage() {
             </div>
 
             <div className="mt-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-left text-xs text-foreground/80">
-              {TOLERANCE_NOTICE}
+              {toleranceNotice}
             </div>
 
             <div className="mt-6 flex flex-col gap-2.5">
@@ -464,7 +466,7 @@ function AgendarPage() {
                   </ul>
                 </div>
 
-                <p className="text-xs text-muted-foreground">{TOLERANCE_NOTICE}</p>
+                <p className="text-xs text-muted-foreground">{toleranceNotice}</p>
 
                 <Button
                   onClick={handleConfirm}
