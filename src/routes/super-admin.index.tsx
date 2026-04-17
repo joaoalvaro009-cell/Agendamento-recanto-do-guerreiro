@@ -225,7 +225,22 @@ function SuperAdminPage() {
     }
   }
 
-  if (!authChecked) {
+  async function handleDelete(t: Tenant) {
+    const confirmation = window.prompt(
+      `Apagar definitivamente "${t.name}" e TODOS os dados (serviços, planos, agendamentos, equipe)?\n\nDigite o slug "${t.slug}" para confirmar:`,
+    );
+    if (confirmation !== t.slug) {
+      if (confirmation !== null) toast.error("Confirmação não confere. Nada foi apagado.");
+      return;
+    }
+    try {
+      await deleteTenant({ data: { tenantId: t.id } });
+      toast.success(`Barbearia "${t.name}" apagada.`);
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao apagar.");
+    }
+  }
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-gold" />
