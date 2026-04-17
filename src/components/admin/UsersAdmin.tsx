@@ -45,6 +45,8 @@ const emptyForm = {
   password: "",
   isAdmin: false,
   withLogin: true,
+  loginType: "phone" as "phone" | "email",
+  loginEmail: "",
 };
 
 function phoneToEmail(phone: string): string {
