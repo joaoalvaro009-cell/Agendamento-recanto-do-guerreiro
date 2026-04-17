@@ -173,7 +173,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
             Estes barbeiros estão cadastrados mas ainda não conseguem entrar no painel. Crie um login para conectar.
           </p>
           {withoutLogin.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-amber-400/30 bg-surface/60 p-4 shadow-card">
+            <div key={r.id} className="rounded-2xl border border-gold/30 bg-surface/60 p-4 shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold">{r.name}</p>
