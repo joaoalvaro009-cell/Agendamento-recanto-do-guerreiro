@@ -164,7 +164,22 @@ function PainelPage() {
           </TabsList>
 
           <TabsContent value="agenda" className="mt-6">
-            <div className="inline-flex rounded-full border border-border/60 bg-surface/60 p-1">
+            {user?.isAdmin && myBarberId && (
+              <div className="mb-3 inline-flex rounded-full border border-gold/40 bg-surface/60 p-1">
+                {(["mine", "team", "all"] as Scope[]).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setScope(s)}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      scope === s ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-muted-foreground"
+                    }`}
+                  >
+                    {s === "mine" ? "Meus agendamentos" : s === "team" ? "Agendamentos da equipe" : "Todos"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="inline-flex rounded-full border border-border/60 bg-surface/60 p-1 sm:ml-2">
               {(["today", "upcoming", "all"] as Filter[]).map((f) => (
                 <button
                   key={f}
