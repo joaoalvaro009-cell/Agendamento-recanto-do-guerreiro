@@ -125,6 +125,29 @@ export function SiteSettingsAdmin() {
             )}
           </div>
         </div>
+
+        <div className="mt-5 border-t border-border/40 pt-4">
+          <Label className="text-xs">Tamanho da logo no site</Label>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Define o quão grande a logo aparece no <strong>topo</strong> e no <strong>rodapé</strong>. Após salvar, recarregue o site público para ver a mudança.
+          </p>
+          <div className="mt-3 inline-flex rounded-full border border-border/60 bg-background/40 p-1">
+            {(["small", "medium", "large"] as const).map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setSettings({ ...settings, logo_size: size })}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                  settings.logo_size === size
+                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {size === "small" ? "Pequena" : size === "medium" ? "Média" : "Grande"}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Instagram */}
