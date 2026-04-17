@@ -19,6 +19,7 @@ import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
 import { Route as SuperAdminLoginRouteImport } from './routes/super-admin.login'
+import { Route as BSlugRouteImport } from './routes/b.$slug'
 
 const ServicosRoute = ServicosRouteImport.update({
   id: '/servicos',
@@ -70,6 +71,11 @@ const SuperAdminLoginRoute = SuperAdminLoginRouteImport.update({
   path: '/super-admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BSlugRoute = BSlugRouteImport.update({
+  id: '/b/$slug',
+  path: '/b/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/painel': typeof PainelRoute
   '/planos': typeof PlanosRoute
   '/servicos': typeof ServicosRoute
+  '/b/$slug': typeof BSlugRoute
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin/': typeof SuperAdminIndexRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/painel': typeof PainelRoute
   '/planos': typeof PlanosRoute
   '/servicos': typeof ServicosRoute
+  '/b/$slug': typeof BSlugRoute
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin': typeof SuperAdminIndexRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/painel': typeof PainelRoute
   '/planos': typeof PlanosRoute
   '/servicos': typeof ServicosRoute
+  '/b/$slug': typeof BSlugRoute
   '/super-admin/login': typeof SuperAdminLoginRoute
   '/super-admin/': typeof SuperAdminIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/planos'
     | '/servicos'
+    | '/b/$slug'
     | '/super-admin/login'
     | '/super-admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/planos'
     | '/servicos'
+    | '/b/$slug'
     | '/super-admin/login'
     | '/super-admin'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/planos'
     | '/servicos'
+    | '/b/$slug'
     | '/super-admin/login'
     | '/super-admin/'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   PainelRoute: typeof PainelRoute
   PlanosRoute: typeof PlanosRoute
   ServicosRoute: typeof ServicosRoute
+  BSlugRoute: typeof BSlugRoute
   SuperAdminLoginRoute: typeof SuperAdminLoginRoute
   SuperAdminIndexRoute: typeof SuperAdminIndexRoute
 }
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b/$slug': {
+      id: '/b/$slug'
+      path: '/b/$slug'
+      fullPath: '/b/$slug'
+      preLoaderRoute: typeof BSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -244,9 +264,19 @@ const rootRouteChildren: RootRouteChildren = {
   PainelRoute: PainelRoute,
   PlanosRoute: PlanosRoute,
   ServicosRoute: ServicosRoute,
+  BSlugRoute: BSlugRoute,
   SuperAdminLoginRoute: SuperAdminLoginRoute,
   SuperAdminIndexRoute: SuperAdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
