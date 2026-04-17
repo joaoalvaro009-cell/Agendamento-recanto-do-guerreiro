@@ -15,6 +15,7 @@ import { SiteSettingsAdmin } from "@/components/admin/SiteSettingsAdmin";
 import { SiteTextsAdmin } from "@/components/admin/SiteTextsAdmin";
 import { TestimonialsAdmin } from "@/components/admin/TestimonialsAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
+import { NotificationPreferences } from "@/components/admin/NotificationPreferences";
 
 type Appointment = {
   id: string;
@@ -165,6 +166,7 @@ function PainelPage() {
             {user?.isAdmin && <TabsTrigger value="texts">Textos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>}
             <TabsTrigger value="account">Minha conta</TabsTrigger>
+            <TabsTrigger value="notifications">Notificações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="agenda" className="mt-6">
@@ -296,6 +298,10 @@ function PainelPage() {
 
           <TabsContent value="account" className="mt-6">
             {user && <MyAccount currentEmail={user.email} />}
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-6">
+            {user && <NotificationPreferences userId={user.id} />}
           </TabsContent>
         </Tabs>
       </section>
