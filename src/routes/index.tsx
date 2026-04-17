@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Calendar, Check, ChevronRight, Clock, MapPin, Scissors, Sparkles, Star } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
-import { PLANS, SERVICES, SHOP } from "@/lib/constants";
-import { fetchTeam, type TeamRow } from "@/lib/queries";
+import { SHOP } from "@/lib/constants";
+import { fetchTeam, fetchPlans, fetchServices, type TeamRow, type PlanRow, type ServiceRow } from "@/lib/queries";
 import hero from "@/assets/hero-barbershop.jpg";
 import brunoFallback from "@/assets/barber-bruno.jpg";
 import pedrinhoFallback from "@/assets/barber-pedrinho.jpg";
@@ -41,8 +41,12 @@ const testimonials = [
 
 function Home() {
   const [team, setTeam] = useState<TeamRow[]>([]);
+  const [plans, setPlans] = useState<PlanRow[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   useEffect(() => {
     fetchTeam().then(setTeam).catch(() => {});
+    fetchPlans().then(setPlans).catch(() => {});
+    fetchServices().then(setServices).catch(() => {});
   }, []);
 
   return (
@@ -102,7 +106,7 @@ function Home() {
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICES.map((s) => (
+          {services.map((s) => (
             <div
               key={s.id}
               className="group rounded-2xl border border-border/60 bg-surface/60 p-6 shadow-card transition hover:border-gold/60 hover:shadow-gold"
@@ -157,7 +161,7 @@ function Home() {
         </div>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
-          {PLANS.map((p) => (
+          {plans.map((p) => (
             <div
               key={p.id}
               className={`relative rounded-2xl border p-7 shadow-card transition ${
@@ -175,7 +179,7 @@ function Home() {
                 <span className="text-sm text-muted-foreground"> /mês</span>
               </p>
               <ul className="mt-5 space-y-2.5 text-sm">
-                {p.items.map((i) => (
+                {p.items.map((i: string) => (
                   <li key={i} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" /> {i}</li>
                 ))}
               </ul>
