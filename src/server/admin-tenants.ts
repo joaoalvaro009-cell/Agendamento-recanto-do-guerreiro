@@ -301,7 +301,7 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
   // site_settings
   if (settingsRes.data) {
     const s = settingsRes.data;
-    await supabaseAdmin.from("site_settings").insert({
+    const { error } = await supabaseAdmin.from("site_settings").insert({
       tenant_id: newTenantId,
       shop_name: newName,
       tagline: s.tagline,
@@ -318,11 +318,12 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
       color_accent: s.color_accent,
       color_background: s.color_background,
     });
+    if (error) throw new Error(`Falha ao copiar configurações: ${error.message}`);
   }
 
   // services
   if (servicesRes.data?.length) {
-    await supabaseAdmin.from("services").insert(
+    const { error } = await supabaseAdmin.from("services").insert(
       servicesRes.data.map((r) => ({
         tenant_id: newTenantId,
         slug: r.slug,
@@ -335,11 +336,12 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
         active: r.active,
       })),
     );
+    if (error) throw new Error(`Falha ao copiar serviços: ${error.message}`);
   }
 
   // plans
   if (plansRes.data?.length) {
-    await supabaseAdmin.from("plans").insert(
+    const { error } = await supabaseAdmin.from("plans").insert(
       plansRes.data.map((r) => ({
         tenant_id: newTenantId,
         slug: r.slug,
@@ -351,11 +353,12 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
         active: r.active,
       })),
     );
+    if (error) throw new Error(`Falha ao copiar planos: ${error.message}`);
   }
 
   // site_texts
   if (textsRes.data?.length) {
-    await supabaseAdmin.from("site_texts").insert(
+    const { error } = await supabaseAdmin.from("site_texts").insert(
       textsRes.data.map((r) => ({
         tenant_id: newTenantId,
         key: r.key,
@@ -363,11 +366,12 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
         description: r.description,
       })),
     );
+    if (error) throw new Error(`Falha ao copiar textos: ${error.message}`);
   }
 
   // team_members
   if (teamRes.data?.length) {
-    await supabaseAdmin.from("team_members").insert(
+    const { error } = await supabaseAdmin.from("team_members").insert(
       teamRes.data.map((r) => ({
         tenant_id: newTenantId,
         name: r.name,
@@ -379,5 +383,6 @@ async function cloneTemplateForNewTenant(newTenantId: string, newName: string) {
         active: r.active,
       })),
     );
+    if (error) throw new Error(`Falha ao copiar equipe: ${error.message}`);
   }
 }
