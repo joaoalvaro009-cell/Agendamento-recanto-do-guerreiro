@@ -60,13 +60,18 @@ export const createBarberUser = createServerFn({ method: "POST" })
       throw new Error(bErr.message);
     }
 
-    await supabaseAdmin.from("user_roles").insert({
+    const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
       user_id: userId,
       role: data.isAdmin ? "admin" : "barber",
     });
+    if (roleErr) {
+      await supabaseAdmin.from("barbers").delete().eq("user_id", userId);
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(roleErr.message);
+    }
 
     // Cria também na vitrine pública (Membros)
-    await supabaseAdmin.from("team_members").insert({
+    const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
       name: data.name,
       role: publicRole,
       bio,
@@ -74,6 +79,12 @@ export const createBarberUser = createServerFn({ method: "POST" })
       image_url: data.imageUrl ?? null,
       active: true,
     });
+    if (memberErr) {
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+      await supabaseAdmin.from("barbers").delete().eq("user_id", userId);
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(memberErr.message);
+    }
 
     return { userId };
   });
@@ -112,7 +123,7 @@ export const updateUserPassword = createServerFn({ method: "POST" })
 
 export const setBarberActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { barberId: string; active: boolean }) => d)
+  .inputValidator((d: { barberId: string; teamMemberId?: string | null; active: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { data: barber } = await supabaseAdmin
@@ -125,7 +136,9 @@ export const setBarberActive = createServerFn({ method: "POST" })
       .update({ active: data.active })
       .eq("id", data.barberId);
     if (error) throw new Error(error.message);
-    if (barber?.name) {
+    if (data.teamMemberId) {
+      await supabaseAdmin.from("team_members").update({ active: data.active }).eq("id", data.teamMemberId);
+    } else if (barber?.name) {
       await supabaseAdmin.from("team_members").update({ active: data.active }).eq("name", barber.name);
     }
     return { ok: true };
@@ -274,7 +287,7 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
 
     const { data: barber, error: bErr } = await supabaseAdmin
       .from("barbers")
-      .select("id, user_id, name")
+      .select("id, user_id, name, phone, bio, avatar_url, is_admin")
       .eq("id", data.barberId)
       .maybeSingle();
     if (bErr) throw new Error(bErr.message);
@@ -299,10 +312,37 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
       throw new Error(uErr.message);
     }
 
-    await supabaseAdmin.from("user_roles").insert({
+    const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
       user_id: userId,
       role: data.isAdmin ? "admin" : "barber",
     });
+    if (roleErr) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(roleErr.message);
+    }
+
+    const { data: existingMember } = await supabaseAdmin
+      .from("team_members")
+      .select("id")
+      .eq("name", barber.name)
+      .maybeSingle();
+
+    if (!existingMember) {
+      const { error: memberErr } = await supabaseAdmin.from("team_members").insert({
+        name: barber.name,
+        role: data.isAdmin ? "Administrador" : "Barbeiro",
+        bio: barber.bio ?? "",
+        image_url: barber.avatar_url ?? null,
+        icon: "star",
+        active: true,
+      });
+      if (memberErr) {
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+        await supabaseAdmin.from("barbers").update({ user_id: null, email: null }).eq("id", data.barberId);
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw new Error(memberErr.message);
+      }
+    }
 
     return { userId };
   });

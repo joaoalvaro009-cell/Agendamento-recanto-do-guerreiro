@@ -13,6 +13,7 @@ import {
   createBarberUser,
   deleteBarberUser,
   linkLoginToBarber,
+  listBarberUsers,
   setBarberActive,
   updateMemberProfile,
   updateUserEmail,
@@ -51,6 +52,7 @@ function phoneToEmail(phone: string): string {
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const createBarberUserFn = useServerFn(createBarberUser);
+  const listBarberUsersFn = useServerFn(listBarberUsers);
   const updateUserEmailFn = useServerFn(updateUserEmail);
   const updateUserPasswordFn = useServerFn(updateUserPassword);
   const setBarberActiveFn = useServerFn(setBarberActive);
@@ -62,43 +64,18 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   const [uploadingNew, setUploadingNew] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
+  async function getAuthHeaders() {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Sessão expirada. Entre novamente.");
+    return { authorization: `Bearer ${token}` };
+  }
+
   async function load() {
     setLoading(true);
     try {
-      const [barbersRes, teamRes] = await Promise.all([
-        supabase
-          .from("barbers")
-          .select("id, user_id, name, phone, email, is_admin, active")
-          .order("display_order")
-          .order("created_at"),
-        supabase
-          .from("team_members")
-          .select("id, name, role, bio, image_url, icon, active")
-          .order("display_order")
-          .order("created_at"),
-      ]);
-
-      if (barbersRes.error) throw barbersRes.error;
-      if (teamRes.error) throw teamRes.error;
-
-      const teamByName = new Map(
-        (teamRes.data ?? []).map((member) => [member.name.trim().toLowerCase(), member]),
-      );
-
-      const merged = (barbersRes.data ?? []).map((barber) => {
-        const member = teamByName.get(barber.name.trim().toLowerCase());
-
-        return {
-          ...barber,
-          team_member_id: member?.id ?? null,
-          public_role: member?.role ?? (barber.is_admin ? "Administrador" : "Barbeiro"),
-          public_bio: member?.bio ?? "",
-          public_image_url: member?.image_url ?? null,
-          public_icon: member?.icon ?? "star",
-        } satisfies Row;
-      });
-
-      setRows(merged);
+      const result = await listBarberUsersFn({ headers: await getAuthHeaders() });
+      setRows((result.barbers ?? []) as Row[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao listar.");
       setRows([]);
@@ -136,6 +113,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       const phoneDigits = onlyDigits(form.phone);
       if (form.withLogin) {
         await createBarberUserFn({
+          headers: await getAuthHeaders(),
           data: {
             name: form.name,
             phone: form.phone,
@@ -184,7 +162,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     const newPassword = prompt("Nova senha (mín 8 caracteres):");
     if (!newPassword) return;
     try {
-      await updateUserPasswordFn({ data: { targetUserId: userId, newPassword } });
+      await updateUserPasswordFn({ headers: await getAuthHeaders(), data: { targetUserId: userId, newPassword } });
       toast.success("Senha atualizada.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro.");
@@ -195,7 +173,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     const newEmail = prompt("Novo email:", current ?? "");
     if (!newEmail) return;
     try {
-      await updateUserEmailFn({ data: { targetUserId: userId, newEmail } });
+      await updateUserEmailFn({ headers: await getAuthHeaders(), data: { targetUserId: userId, newEmail } });
       toast.success("Email atualizado.");
       void load();
     } catch (e) {
@@ -203,9 +181,9 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     }
   }
 
-  async function handleToggleActive(barberId: string, active: boolean) {
+  async function handleToggleActive(barberId: string, active: boolean, teamMemberId: string | null) {
     try {
-      await setBarberActiveFn({ data: { barberId, active: !active } });
+      await setBarberActiveFn({ headers: await getAuthHeaders(), data: { barberId, teamMemberId, active: !active } });
       void load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro.");
@@ -215,7 +193,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   async function handleDelete(userId: string | null, barberId: string) {
     if (!confirm("Excluir membro (login + perfil público)? Ação irreversível.")) return;
     try {
-      await deleteBarberUserFn({ data: { targetUserId: userId, barberId } });
+      await deleteBarberUserFn({ headers: await getAuthHeaders(), data: { targetUserId: userId, barberId } });
       toast.success("Excluído.");
       void load();
     } catch (e) {
@@ -345,8 +323,9 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
             onLink={() => void load()}
             onChangeEmail={() => void handleChangeEmail(r.user_id!, r.email)}
             onResetPassword={() => void handleResetPassword(r.user_id!)}
-            onToggleActive={() => void handleToggleActive(r.id, r.active)}
+            onToggleActive={() => void handleToggleActive(r.id, r.active, r.team_member_id)}
             onDelete={() => void handleDelete(r.user_id, r.id)}
+            getAuthHeaders={getAuthHeaders}
           />
         ))}
       </div>
@@ -362,6 +341,7 @@ function MemberCard({
   onResetPassword,
   onToggleActive,
   onDelete,
+  getAuthHeaders,
 }: {
   row: Row;
   isSelf: boolean;
@@ -371,6 +351,7 @@ function MemberCard({
   onResetPassword: () => void;
   onToggleActive: () => void;
   onDelete: () => void;
+  getAuthHeaders: () => Promise<{ authorization: string }>;
 }) {
   const updateMemberProfileFn = useServerFn(updateMemberProfile);
   const linkLoginToBarberFn = useServerFn(linkLoginToBarber);
@@ -383,7 +364,7 @@ function MemberCard({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [linking, setLinking] = useState(false);
-  const [linkForm, setLinkForm] = useState({ email: row.email ?? "", password: "", isAdmin: row.is_admin });
+  const [linkForm, setLinkForm] = useState({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
 
   useEffect(() => {
     setName(row.name);
@@ -392,6 +373,7 @@ function MemberCard({
     setBio(row.public_bio);
     setIcon(row.public_icon || "star");
     setImageUrl(row.public_image_url);
+    setLinkForm({ email: row.email ?? phoneToEmail(row.phone), password: "", isAdmin: row.is_admin });
   }, [row]);
 
   async function handleUpload(file: File) {
@@ -410,6 +392,7 @@ function MemberCard({
     setSaving(true);
     try {
       await updateMemberProfileFn({
+        headers: await getAuthHeaders(),
         data: { barberId: row.id, name, phone, role, bio, imageUrl, icon },
       });
       toast.success("Perfil salvo.");
@@ -422,12 +405,16 @@ function MemberCard({
   }
 
   async function handleLink() {
-    if (!linkForm.email || !linkForm.password) {
-      toast.error("Email e senha são obrigatórios.");
+    const email = linkForm.email.trim() || phoneToEmail(phone);
+    if (!linkForm.password) {
+      toast.error("Senha é obrigatória.");
       return;
     }
     try {
-      await linkLoginToBarberFn({ data: { barberId: row.id, ...linkForm } });
+      await linkLoginToBarberFn({
+        headers: await getAuthHeaders(),
+        data: { barberId: row.id, email, password: linkForm.password, isAdmin: linkForm.isAdmin },
+      });
       toast.success("Login conectado.");
       setLinking(false);
       void onReload();
@@ -527,7 +514,7 @@ function MemberCard({
             <div className="mt-2 grid gap-2 rounded-xl border border-gold/30 bg-background/40 p-3 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Email (login)</Label>
-                <Input type="email" value={linkForm.email} onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })} />
+                <Input type="email" value={linkForm.email} onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })} placeholder={phoneToEmail(phone)} />
               </div>
               <div>
                 <Label className="text-xs">Senha (mín 8)</Label>
