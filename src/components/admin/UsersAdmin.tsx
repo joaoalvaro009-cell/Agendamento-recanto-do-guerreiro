@@ -45,6 +45,8 @@ const emptyForm = {
   password: "",
   isAdmin: false,
   withLogin: true,
+  loginType: "phone" as "phone" | "email",
+  loginEmail: "",
 };
 
 function phoneToEmail(phone: string): string {
@@ -109,10 +111,16 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       toast.error("Senha precisa ter ao menos 4 caracteres (ou desmarque 'Criar login agora').");
       return;
     }
+    if (form.withLogin && form.loginType === "email" && !form.loginEmail.includes("@")) {
+      toast.error("Email de login inválido.");
+      return;
+    }
     setCreating(true);
     try {
       const phoneDigits = onlyDigits(form.phone);
       if (form.withLogin) {
+        const loginEmail =
+          form.loginType === "email" ? form.loginEmail.trim() : phoneToEmail(phoneDigits);
         await createBarberUserFn({
           headers: await getAuthHeaders(),
           data: {
@@ -121,12 +129,16 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
             role: form.role,
             bio: form.bio,
             imageUrl: form.imageUrl,
-            email: phoneToEmail(phoneDigits),
+            email: loginEmail,
             password: form.password,
             isAdmin: form.isAdmin,
           },
         });
-        toast.success("Membro criado com login (WhatsApp como usuário).");
+        toast.success(
+          form.loginType === "email"
+            ? "Membro criado com login por email."
+            : "Membro criado com login (WhatsApp como usuário).",
+        );
       } else {
         // Cria só o perfil público + barbeiro, sem login
         const { error: bErr } = await supabase.from("barbers").insert({
@@ -264,16 +276,62 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 {form.withLogin && (
-                  <div className="sm:col-span-2">
-                    <Label className="text-xs">Senha inicial (mín 4 caracteres)</Label>
-                    <PasswordInput
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      placeholder="O usuário entra com o WhatsApp + esta senha"
-                    />
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      O login será feito com <strong>WhatsApp</strong> (mesmo da vitrine) e esta senha.
-                    </p>
+                  <div className="sm:col-span-2 space-y-2 rounded-xl border border-border/60 bg-background/40 p-3">
+                    <div>
+                      <Label className="text-xs">Tipo de login</Label>
+                      <div className="mt-1 flex gap-3 text-sm">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="loginType"
+                            checked={form.loginType === "phone"}
+                            onChange={() => setForm({ ...form, loginType: "phone" })}
+                          />
+                          WhatsApp (recomendado)
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="loginType"
+                            checked={form.loginType === "email"}
+                            onChange={() => setForm({ ...form, loginType: "email" })}
+                          />
+                          Email
+                        </label>
+                      </div>
+                    </div>
+
+                    {form.loginType === "email" && (
+                      <div>
+                        <Label className="text-xs">Email de login</Label>
+                        <Input
+                          type="email"
+                          value={form.loginEmail}
+                          onChange={(e) => setForm({ ...form, loginEmail: e.target.value })}
+                          placeholder="usuario@exemplo.com"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <Label className="text-xs">Senha inicial (mín 4 caracteres)</Label>
+                      <PasswordInput
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        placeholder={
+                          form.loginType === "phone"
+                            ? "O usuário entra com o WhatsApp + esta senha"
+                            : "O usuário entra com o email + esta senha"
+                        }
+                      />
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {form.loginType === "phone" ? (
+                          <>O login será feito com <strong>WhatsApp</strong> (mesmo da vitrine) e esta senha.</>
+                        ) : (
+                          <>O login será feito com o <strong>email</strong> acima e esta senha.</>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 )}
                 <div className="sm:col-span-2">
