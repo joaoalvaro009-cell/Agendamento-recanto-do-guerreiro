@@ -104,8 +104,8 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
       toast.error("Preencha pelo menos nome e WhatsApp.");
       return;
     }
-    if (form.withLogin && form.password.trim().length < 8) {
-      toast.error("Senha precisa ter ao menos 8 caracteres (ou desmarque 'Criar login agora').");
+    if (form.withLogin && form.password.trim().length < 4) {
+      toast.error("Senha precisa ter ao menos 4 caracteres (ou desmarque 'Criar login agora').");
       return;
     }
     setCreating(true);
@@ -159,8 +159,11 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   }
 
   async function handleResetPassword(userId: string) {
-    const newPassword = prompt("Nova senha (mín 8 caracteres):");
-    if (!newPassword) return;
+    const newPassword = prompt("Nova senha (mín 4 caracteres):");
+    if (!newPassword || newPassword.length < 4) {
+      if (newPassword) toast.error("Senha precisa ter ao menos 4 caracteres.");
+      return;
+    }
     try {
       await updateUserPasswordFn({ headers: await getAuthHeaders(), data: { targetUserId: userId, newPassword } });
       toast.success("Senha atualizada.");
@@ -261,7 +264,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
                 </div>
                 {form.withLogin && (
                   <div className="sm:col-span-2">
-                    <Label className="text-xs">Senha inicial (mín 8 caracteres)</Label>
+                    <Label className="text-xs">Senha inicial (mín 4 caracteres)</Label>
                     <Input
                       type="password"
                       value={form.password}
@@ -521,7 +524,7 @@ function MemberCard({
                 <Input type="email" value={linkForm.email} onChange={(e) => setLinkForm({ ...linkForm, email: e.target.value })} placeholder={phoneToEmail(phone)} />
               </div>
               <div>
-                <Label className="text-xs">Senha (mín 8)</Label>
+                <Label className="text-xs">Senha (mín 4)</Label>
                 <Input type="password" value={linkForm.password} onChange={(e) => setLinkForm({ ...linkForm, password: e.target.value })} />
               </div>
               <label className="flex items-center gap-2 text-sm sm:col-span-2">

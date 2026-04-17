@@ -25,7 +25,7 @@ export const createBarberUser = createServerFn({ method: "POST" })
     imageUrl?: string | null;
   }) => {
     if (!d.email.includes("@")) throw new Error("Email inválido.");
-    if (d.password.length < 8) throw new Error("Senha precisa ter ao menos 8 caracteres.");
+    if (d.password.length < 4) throw new Error("Senha precisa ter ao menos 4 caracteres.");
     if (d.name.trim().length < 2) throw new Error("Nome inválido.");
     if (d.phone.replace(/\D/g, "").length < 10) throw new Error("WhatsApp inválido.");
     return d;
@@ -109,7 +109,7 @@ export const updateUserEmail = createServerFn({ method: "POST" })
 export const updateUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { targetUserId: string; newPassword: string }) => {
-    if (d.newPassword.length < 8) throw new Error("Senha precisa ter ao menos 8 caracteres.");
+    if (d.newPassword.length < 4) throw new Error("Senha precisa ter ao menos 4 caracteres.");
     return d;
   })
   .handler(async ({ data, context }) => {
@@ -279,7 +279,7 @@ export const linkLoginToBarber = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { barberId: string; email: string; password: string; isAdmin: boolean }) => {
     if (!d.email.includes("@")) throw new Error("Email inválido.");
-    if (d.password.length < 8) throw new Error("Senha precisa ter ao menos 8 caracteres.");
+    if (d.password.length < 4) throw new Error("Senha precisa ter ao menos 4 caracteres.");
     return d;
   })
   .handler(async ({ data, context }) => {
