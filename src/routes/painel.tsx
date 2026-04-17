@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, Clock, LogOut, Phone, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { SiteLayout } from "@/components/SiteLayout";
@@ -35,39 +35,43 @@ function PainelPage() {
   const [filter, setFilter] = useState<Filter>("today");
   const [user, setUser] = useState<{ name: string; isAdmin: boolean } | null>(null);
 
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .order("appointment_date", { ascending: true })
+      .order("appointment_time", { ascending: true });
+    if (error) {
+      toast.error("Não foi possível carregar agendamentos.");
+      setLoading(false);
+      return;
+    }
+    setAppointments((data ?? []) as Appointment[]);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
-    void (async () => {
+    let cancelled = false;
+    (async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
         navigate({ to: "/login" });
         return;
       }
       const userId = session.session.user.id;
-      const [{ data: barber }, { data: roles }] = await Promise.all([
+      const [barberRes, rolesRes] = await Promise.all([
         supabase.from("barbers").select("name").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
-      const isAdmin = (roles ?? []).some((r) => r.role === "admin");
-      setUser({ name: barber?.name ?? "Barbeiro", isAdmin });
+      if (cancelled) return;
+      const isAdmin = (rolesRes.data ?? []).some((r) => r.role === "admin");
+      setUser({ name: barberRes.data?.name ?? "Barbeiro", isAdmin });
       await load();
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function load() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("appointment_date", { ascending: true })
-      .order("appointment_time", { ascending: true });
-    setLoading(false);
-    if (error) {
-      toast.error("Não foi possível carregar agendamentos.");
-      return;
-    }
-    setAppointments((data ?? []) as Appointment[]);
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, load]);
 
   async function logout() {
     await supabase.auth.signOut();
