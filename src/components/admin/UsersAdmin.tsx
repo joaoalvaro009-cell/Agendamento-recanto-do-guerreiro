@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { KeyRound, Loader2, Mail, Plus, Power, Trash2, Upload, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,12 @@ const emptyForm = {
 };
 
 export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
+  const listBarberUsersFn = useServerFn(listBarberUsers);
+  const createBarberUserFn = useServerFn(createBarberUser);
+  const updateUserEmailFn = useServerFn(updateUserEmail);
+  const updateUserPasswordFn = useServerFn(updateUserPassword);
+  const setBarberActiveFn = useServerFn(setBarberActive);
+  const deleteBarberUserFn = useServerFn(deleteBarberUser);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -54,7 +61,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   async function load() {
     setLoading(true);
     try {
-      const res = await listBarberUsers();
+      const res = await listBarberUsersFn();
       setRows((res?.barbers ?? []) as Row[]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao listar.");
@@ -86,11 +93,11 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     }
     setCreating(true);
     try {
-      await createBarberUser({ data: form });
+      await createBarberUserFn({ data: form });
       toast.success("Membro criado com login.");
       setForm(emptyForm);
       setShowNew(false);
-      void load();
+      await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar.");
     } finally {
@@ -102,7 +109,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     const newPassword = prompt("Nova senha (mín 8 caracteres):");
     if (!newPassword) return;
     try {
-      await updateUserPassword({ data: { targetUserId: userId, newPassword } });
+      await updateUserPasswordFn({ data: { targetUserId: userId, newPassword } });
       toast.success("Senha atualizada.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro.");
@@ -113,7 +120,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
     const newEmail = prompt("Novo email:", current ?? "");
     if (!newEmail) return;
     try {
-      await updateUserEmail({ data: { targetUserId: userId, newEmail } });
+      await updateUserEmailFn({ data: { targetUserId: userId, newEmail } });
       toast.success("Email atualizado.");
       void load();
     } catch (e) {
@@ -123,7 +130,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
 
   async function handleToggleActive(barberId: string, active: boolean) {
     try {
-      await setBarberActive({ data: { barberId, active: !active } });
+      await setBarberActiveFn({ data: { barberId, active: !active } });
       void load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro.");
@@ -133,7 +140,7 @@ export function UsersAdmin({ currentUserId }: { currentUserId: string }) {
   async function handleDelete(userId: string | null, barberId: string) {
     if (!confirm("Excluir membro (login + perfil público)? Ação irreversível.")) return;
     try {
-      await deleteBarberUser({ data: { targetUserId: userId, barberId } });
+      await deleteBarberUserFn({ data: { targetUserId: userId, barberId } });
       toast.success("Excluído.");
       void load();
     } catch (e) {
@@ -269,6 +276,8 @@ function MemberCard({
   onToggleActive: () => void;
   onDelete: () => void;
 }) {
+  const updateMemberProfileFn = useServerFn(updateMemberProfile);
+  const linkLoginToBarberFn = useServerFn(linkLoginToBarber);
   const [name, setName] = useState(row.name);
   const [phone, setPhone] = useState(row.phone);
   const [role, setRole] = useState(row.public_role);
@@ -304,7 +313,7 @@ function MemberCard({
   async function handleSave() {
     setSaving(true);
     try {
-      await updateMemberProfile({
+      await updateMemberProfileFn({
         data: { barberId: row.id, name, phone, role, bio, imageUrl, icon },
       });
       toast.success("Perfil salvo.");
@@ -322,7 +331,7 @@ function MemberCard({
       return;
     }
     try {
-      await linkLoginToBarber({ data: { barberId: row.id, ...linkForm } });
+      await linkLoginToBarberFn({ data: { barberId: row.id, ...linkForm } });
       toast.success("Login conectado.");
       setLinking(false);
       void onReload();
