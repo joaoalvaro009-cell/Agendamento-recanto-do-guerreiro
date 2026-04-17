@@ -21,6 +21,7 @@ export type PlanRow = {
   featured: boolean;
   display_order: number;
   active: boolean;
+  checkout_url: string;
 };
 
 export type TeamRow = {
@@ -56,6 +57,7 @@ export async function fetchPlans(includeInactive = false): Promise<PlanRow[]> {
     featured: Boolean(plan.featured),
     display_order: Number(plan.display_order ?? 0),
     active: plan.active ?? true,
+    checkout_url: typeof (plan as { checkout_url?: unknown }).checkout_url === "string" ? (plan as { checkout_url: string }).checkout_url : "",
   }));
 }
 

@@ -46,6 +46,7 @@ function PlanosPage() {
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {plans.map((p) => {
               const message = `Olá, gostaria de assinar o plano *${p.name}* — R$ ${Number(p.price).toFixed(2).replace(".", ",")}.`;
+              const href = p.checkout_url?.trim() ? p.checkout_url : whatsAppLink("75 9301-7859", message);
               return (
                 <div
                   key={p.id}
@@ -80,7 +81,7 @@ function PlanosPage() {
                   </ul>
 
                   <a
-                    href={whatsAppLink("75 9301-7859", message)}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`mt-7 block rounded-full px-5 py-3 text-center text-sm font-semibold transition ${

@@ -35,7 +35,8 @@ export function PlansAdmin() {
         featured: p.featured,
         display_order: p.display_order,
         active: p.active,
-      })
+        checkout_url: p.checkout_url ?? "",
+      } as never)
       .eq("id", p.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Salvo.");
@@ -45,7 +46,7 @@ export function PlansAdmin() {
     const tenant_id = await getCurrentTenantId();
     const { error } = await supabase
       .from("plans")
-      .insert({ tenant_id, slug: `novo-${Date.now()}`, name: "Novo plano", price: 0, items: [], display_order: items.length + 1 });
+      .insert({ tenant_id, slug: `novo-${Date.now()}`, name: "Novo plano", price: 0, items: [], display_order: items.length + 1, checkout_url: "" } as never);
     if (error) { toast.error(error.message); return; }
     void load();
   }
@@ -103,6 +104,17 @@ function PlanEditor({
           <Label className="text-xs">Ordem</Label>
           <Input type="number" value={plan.display_order} onChange={(e) => onChange({ ...plan, display_order: parseInt(e.target.value) || 0 })} />
         </div>
+      </div>
+
+      <div>
+        <Label className="text-xs">Link de contratação (cliente vai para esse link ao clicar em "Quero esse plano")</Label>
+        <Input
+          type="url"
+          placeholder="https://... (Stripe, Mercado Pago, WhatsApp, etc.)"
+          value={plan.checkout_url ?? ""}
+          onChange={(e) => onChange({ ...plan, checkout_url: e.target.value })}
+        />
+        <p className="mt-1 text-[11px] text-muted-foreground">Deixe vazio para usar o WhatsApp padrão da barbearia.</p>
       </div>
 
       <div>
