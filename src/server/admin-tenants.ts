@@ -193,26 +193,57 @@ export const createTenantWithOwner = createServerFn({ method: "POST" })
 
     // A partir daqui, se algo falhar, removemos o tenant inteiro para não deixar órfão.
     try {
-      // 4. Atribui role admin (idempotente)
-      const { error: roleErr } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: ownerUserId, role: "admin" });
-      if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
-        throw new Error(`Falha ao atribuir papel de admin: ${roleErr.message}`);
+      // 4. Garante owner_user_id no tenant (idempotente — caso outro fluxo tenha falhado antes)
+      const { error: ownerUpdErr } = await supabaseAdmin
+        .from("tenants")
+        .update({ owner_user_id: ownerUserId })
+        .eq("id", tenantId);
+      if (ownerUpdErr) {
+        throw new Error(`Falha ao registrar dono no tenant: ${ownerUpdErr.message}`);
       }
 
-      // 5. Cria registro do dono em barbers (vincula user_id ao tenant)
-      const { error: barberErr } = await supabaseAdmin.from("barbers").insert({
-        tenant_id: tenantId,
-        user_id: ownerUserId,
-        name: data.name.trim(),
-        phone: "00000000000",
-        email: data.ownerEmail,
-        is_admin: true,
-        active: true,
-        bio: "",
-      });
-      if (barberErr) throw new Error(`Falha ao vincular dono à barbearia: ${barberErr.message}`);
+      // 5. Atribui role admin (idempotente: só insere se ainda não tiver)
+      const { data: existingRoles, error: roleSelErr } = await supabaseAdmin
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", ownerUserId)
+        .eq("role", "admin")
+        .limit(1);
+      if (roleSelErr) {
+        throw new Error(`Falha ao verificar papel existente: ${roleSelErr.message}`);
+      }
+      if (!existingRoles || existingRoles.length === 0) {
+        const { error: roleErr } = await supabaseAdmin
+          .from("user_roles")
+          .insert({ user_id: ownerUserId, role: "admin" });
+        if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
+          throw new Error(`Falha ao atribuir papel de admin: ${roleErr.message}`);
+        }
+      }
+
+      // 6. Cria registro do dono em barbers (idempotente: só insere se não existir para este tenant+user)
+      const { data: existingBarber, error: barberSelErr } = await supabaseAdmin
+        .from("barbers")
+        .select("id")
+        .eq("tenant_id", tenantId)
+        .eq("user_id", ownerUserId)
+        .limit(1);
+      if (barberSelErr) {
+        throw new Error(`Falha ao verificar barbeiro existente: ${barberSelErr.message}`);
+      }
+      if (!existingBarber || existingBarber.length === 0) {
+        const { error: barberErr } = await supabaseAdmin.from("barbers").insert({
+          tenant_id: tenantId,
+          user_id: ownerUserId,
+          name: data.name.trim(),
+          phone: "00000000000",
+          email: data.ownerEmail,
+          is_admin: true,
+          active: true,
+          bio: "",
+        });
+        if (barberErr) throw new Error(`Falha ao vincular dono à barbearia: ${barberErr.message}`);
+      }
 
       // 6. Clona conteúdo padrão da Recanto
       await cloneTemplateForNewTenant(tenantId, data.name.trim());
