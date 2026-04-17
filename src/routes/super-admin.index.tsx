@@ -438,6 +438,15 @@ function SuperAdminPage() {
                     <Power className="h-3 w-3" />
                     {t.active ? "Desativar" : "Ativar"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => void handleDelete(t)}
+                    title="Apagar barbearia e todos os dados"
+                  >
+                    <Trash2 className="h-3 w-3" /> Excluir
+                  </Button>
                 </div>
               </div>
             );
