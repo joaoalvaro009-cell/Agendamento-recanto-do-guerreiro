@@ -16,6 +16,7 @@ import { SiteTextsAdmin } from "@/components/admin/SiteTextsAdmin";
 import { TestimonialsAdmin } from "@/components/admin/TestimonialsAdmin";
 import { MyAccount } from "@/components/admin/MyAccount";
 import { NotificationPreferences } from "@/components/admin/NotificationPreferences";
+import { ClientsAdmin } from "@/components/admin/ClientsAdmin";
 
 type Appointment = {
   id: string;
@@ -159,6 +160,7 @@ function PainelPage() {
         <Tabs defaultValue="agenda" className="mt-6">
           <TabsList className="flex flex-wrap">
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
+            <TabsTrigger value="clients">Clientes</TabsTrigger>
             {user?.isAdmin && <TabsTrigger value="services">Serviços</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="plans">Planos</TabsTrigger>}
             {user?.isAdmin && <TabsTrigger value="users">Membros / Acessos</TabsTrigger>}
