@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { SHOP } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 const links = [
   { to: "/", label: "Início" },
@@ -14,16 +15,27 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { logo_url } = useSiteSettings();
+  const logoSrc = logo_url || logo;
+  const hasCustomLogo = Boolean(logo_url);
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/60">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <img src={logo} alt="Logo Recanto do Guerreiro" className="h-9 w-9" width={36} height={36} />
-          <div className="leading-tight">
-            <div className="font-display text-base font-semibold tracking-wide">{SHOP.name}</div>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{SHOP.tagline}</div>
-          </div>
+          <img
+            src={logoSrc}
+            alt={`Logo ${SHOP.name}`}
+            className={hasCustomLogo ? "h-11 w-auto max-w-[180px] object-contain" : "h-9 w-9"}
+            width={hasCustomLogo ? undefined : 36}
+            height={hasCustomLogo ? undefined : 36}
+          />
+          {!hasCustomLogo && (
+            <div className="leading-tight">
+              <div className="font-display text-base font-semibold tracking-wide">{SHOP.name}</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{SHOP.tagline}</div>
+            </div>
+          )}
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">

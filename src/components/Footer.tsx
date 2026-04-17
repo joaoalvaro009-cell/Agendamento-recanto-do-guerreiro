@@ -1,34 +1,27 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Instagram, MapPin, Phone, Lock } from "lucide-react";
 import { SHOP } from "@/lib/constants";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 export function Footer() {
-  const [instagram, setInstagram] = useState({
-    handle: SHOP.instagram,
-    url: "https://instagram.com/recantodoguerreiro",
-  });
-
-  useEffect(() => {
-    void supabase
-      .from("site_settings")
-      .select("instagram_handle, instagram_url")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setInstagram({ handle: data.instagram_handle, url: data.instagram_url });
-        }
-      });
-  }, []);
+  const { instagram_handle, instagram_url, logo_url } = useSiteSettings();
 
   return (
     <footer className="relative border-t border-border/60 bg-surface/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-4">
         <div className="md:col-span-2">
-          <h3 className="font-display text-2xl font-semibold tracking-tight">{SHOP.name}</h3>
-          <p className="mt-1 text-xs uppercase tracking-[0.22em] text-gold">{SHOP.tagline}</p>
+          {logo_url ? (
+            <img
+              src={logo_url}
+              alt={`Logo ${SHOP.name}`}
+              className="h-14 w-auto max-w-[220px] object-contain"
+            />
+          ) : (
+            <>
+              <h3 className="font-display text-2xl font-semibold tracking-tight">{SHOP.name}</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-gold">{SHOP.tagline}</p>
+            </>
+          )}
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
             Tradição, precisão e estilo. Uma experiência completa para o homem moderno em {SHOP.city}.
           </p>
@@ -56,12 +49,12 @@ export function Footer() {
             <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-gold" /> 75 9301-7859</li>
             <li>
               <a
-                href={instagram.url}
+                href={instagram_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 hover:text-gold"
               >
-                <Instagram className="h-4 w-4 text-gold" /> {instagram.handle}
+                <Instagram className="h-4 w-4 text-gold" /> {instagram_handle}
               </a>
             </li>
           </ul>
