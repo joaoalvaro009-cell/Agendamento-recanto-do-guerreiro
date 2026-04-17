@@ -26,7 +26,7 @@ function phoneToEmail(phone: string): string {
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,13 +39,13 @@ function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: phoneToEmail(phone),
-      password,
-    });
+    const trimmed = identifier.trim();
+    // Aceita telefone (qualquer coisa que não seja email) OU email
+    const email = trimmed.includes("@") ? trimmed : phoneToEmail(trimmed);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
     if (error) {
-      toast.error("Telefone ou senha inválidos.");
+      toast.error("Telefone/email ou senha inválidos.");
       return;
     }
     toast.success("Bem-vindo!");
@@ -68,16 +68,18 @@ function LoginPage() {
 
           <form onSubmit={handleLogin} className="mt-6 space-y-4">
             <div>
-              <Label htmlFor="phone">Telefone</Label>
+              <Label htmlFor="identifier">Telefone ou email</Label>
               <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="75 9999-9999"
-                inputMode="tel"
+                id="identifier"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="75 9999-9999 ou seu@email.com"
                 className="mt-1.5"
                 required
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Use seu WhatsApp (só números) ou email cadastrado.
+              </p>
             </div>
             <div>
               <Label htmlFor="password">Senha</Label>
