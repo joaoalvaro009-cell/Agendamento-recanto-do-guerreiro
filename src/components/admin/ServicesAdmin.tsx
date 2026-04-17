@@ -16,7 +16,8 @@ export function ServicesAdmin() {
   async function load() {
     setLoading(true);
     try {
-      setItems(await fetchServices(true));
+      const tenantId = await getCurrentTenantId();
+      setItems(await fetchServices(tenantId, true));
     } catch {
       toast.error("Erro ao carregar serviços.");
     } finally {

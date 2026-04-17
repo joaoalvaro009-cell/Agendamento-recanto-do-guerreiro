@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSiteTexts, type SiteTextRow } from "@/lib/queries-content";
 import { refreshTenant } from "@/hooks/use-tenant";
+import { getCurrentTenantId } from "@/lib/tenant-context";
 
 export function SiteTextsAdmin() {
   const [items, setItems] = useState<SiteTextRow[]>([]);
@@ -16,7 +17,10 @@ export function SiteTextsAdmin() {
 
   async function load() {
     setLoading(true);
-    try { setItems(await fetchSiteTexts()); }
+    try {
+      const tenantId = await getCurrentTenantId();
+      setItems(await fetchSiteTexts(tenantId));
+    }
     catch { toast.error("Erro ao carregar textos."); }
     finally { setLoading(false); }
   }

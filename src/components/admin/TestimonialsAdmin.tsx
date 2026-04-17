@@ -15,8 +15,10 @@ export function TestimonialsAdmin() {
 
   async function load() {
     setLoading(true);
-    try { setItems(await fetchTestimonials(true)); }
-    catch { toast.error("Erro ao carregar depoimentos."); }
+    try {
+      const tenantId = await getCurrentTenantId();
+      setItems(await fetchTestimonials(tenantId, true));
+    } catch { toast.error("Erro ao carregar depoimentos."); }
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
