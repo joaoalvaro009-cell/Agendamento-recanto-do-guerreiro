@@ -54,6 +54,8 @@ function SuperAdminPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [plan, setPlan] = useState("starter");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [ownerPassword, setOwnerPassword] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
