@@ -124,7 +124,7 @@ function PainelPage() {
             <h1 className="mt-2 font-display text-3xl font-semibold">Olá, {user?.name}</h1>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => void load()}>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               <RefreshCw className="h-4 w-4" /> Atualizar
             </Button>
             <Button variant="ghost" size="sm" onClick={() => void logout()}>
