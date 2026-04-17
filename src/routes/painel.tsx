@@ -298,6 +298,10 @@ function PainelPage() {
             </>
           )}
 
+          <TabsContent value="clients" className="mt-6">
+            {user && <ClientsAdmin isAdmin={user.isAdmin} />}
+          </TabsContent>
+
           <TabsContent value="account" className="mt-6">
             {user && <MyAccount currentEmail={user.email} />}
           </TabsContent>
