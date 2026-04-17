@@ -464,8 +464,4 @@ function SuperAdminPage() {
     </div>
   );
 }
-        </div>
-      </main>
-    </div>
-  );
-}
+
