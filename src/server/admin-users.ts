@@ -51,6 +51,15 @@ export const createBarberUser = createServerFn({ method: "POST" })
       role: data.isAdmin ? "admin" : "barber",
     });
 
+    // Também cria automaticamente na "Vitrine do site" para aparecer publicamente
+    await supabaseAdmin.from("team_members").insert({
+      name: data.name,
+      role: data.isAdmin ? "Administrador" : "Barbeiro",
+      bio: "",
+      icon: "star",
+      active: true,
+    });
+
     return { userId };
   });
 
